@@ -20,5 +20,48 @@ export function useCategorie() {
 
     useEffect(() => { fetchCategorie() }, [fetchCategorie])
 
-    return { categorie, loading, error, refresh: fetchCategorie }
+    const aggiungi = async (cat) => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('Non autenticato')
+
+        // calcola prossimo "ordine"
+        const maxOrdine = categorie.reduce((m, c) => Math.max(m, c.ordine ?? 0), 0)
+
+        const { data, error } = await supabase
+            .from('categorie')
+            .insert({ ...cat, user_id: user.id, ordine: maxOrdine + 1 })
+            .select()
+            .single()
+        if (error) throw error
+        setCategorie(prev => [...prev, data].sort((a, b) => a.ordine - b.ordine))
+        return data
+    }
+
+    const modifica = async (id, patch) => {
+        const { data, error } = await supabase
+            .from('categorie')
+            .update(patch)
+            .eq('id', id)
+            .select()
+            .single()
+        if (error) throw error
+        setCategorie(prev => prev.map(c => c.id === id ? data : c))
+        return data
+    }
+
+    const elimina = async (id) => {
+        const { error } = await supabase.from('categorie').delete().eq('id', id)
+        if (error) throw error
+        setCategorie(prev => prev.filter(c => c.id !== id))
+    }
+
+    return {
+        categorie,
+        loading,
+        error,
+        refresh: fetchCategorie,
+        aggiungi,
+        modifica,
+        elimina,
+    }
 }

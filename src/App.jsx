@@ -1,6 +1,8 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import Login from './components/Login'
 import Home from './components/Home'
+import Categorie from './components/Categorie'
 
 export default function App() {
   const { session, loading } = useAuth()
@@ -13,5 +15,15 @@ export default function App() {
     )
   }
 
-  return session ? <Home /> : <Login />
+  if (!session) return <Login />
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/categorie" element={<Categorie />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  )
 }
