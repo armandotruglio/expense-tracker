@@ -18,6 +18,7 @@ export default function Ricorrenti() {
 
     const [modal, setModal] = useState(null) // { id?, form }
     const [toDelete, setToDelete] = useState(null)
+    const [deleteError, setDeleteError] = useState(null)
     const [applyState, setApplyState] = useState({}) // {id: 'pending'|'done'|'error'}
 
     function apriNuova() { setModal({ form: EMPTY }) }
@@ -34,7 +35,7 @@ export default function Ricorrenti() {
         })
     }
 
-    function handleSubmit(payload) {
+    async function handleSubmit(payload) {
         const data = {
             nome: payload.nome.trim(),
             importo: parseFloat(payload.importo),
@@ -42,9 +43,19 @@ export default function Ricorrenti() {
             categoria_id: payload.categoria_id ? Number(payload.categoria_id) : null,
             giorno: Math.min(31, Math.max(1, parseInt(payload.giorno, 10) || 1)),
         }
-        if (modal?.id) modifica(modal.id, data)
-        else aggiungi(data)
+        if (modal?.id) await modifica(modal.id, data)
+        else await aggiungi(data)
         setModal(null)
+    }
+
+    async function handleConfirmDelete() {
+        if (!toDelete) return
+        try {
+            await elimina(toDelete.id)
+            setToDelete(null)
+        } catch (err) {
+            setDeleteError(err.message)
+        }
     }
 
     async function applicaAlMese(r) {
@@ -222,20 +233,33 @@ export default function Ricorrenti() {
                     : ''}
                 confirmLabel="Elimina"
                 danger
-                onConfirm={() => { if (toDelete) elimina(toDelete.id); setToDelete(null) }}
-                onCancel={() => setToDelete(null)}
+                onConfirm={handleConfirmDelete}
+                onCancel={() => { setToDelete(null); setDeleteError(null) }}
             />
+
+            {deleteError && (
+                <div role="alert" style={S.toast}>Errore: {deleteError}</div>
+            )}
         </div>
     )
 }
 
 function RicorrenteForm({ iniziale, categorie, onSubmit, onCancel }) {
     const [form, setForm] = useState(iniziale)
+    const [saving, setSaving] = useState(false)
+    const [error, setError] = useState(null)
     const isSpesa = form.tipo === 'spesa'
 
-    function submit(e) {
+    async function submit(e) {
         e.preventDefault()
-        onSubmit(form)
+        setError(null)
+        setSaving(true)
+        try {
+            await onSubmit(form)
+        } catch (err) {
+            setError(err.message)
+            setSaving(false)
+        }
     }
 
     return (
@@ -321,12 +345,19 @@ function RicorrenteForm({ iniziale, categorie, onSubmit, onCancel }) {
                 </select>
             </label>
 
+            {error && <div role="alert" style={F.error}>{error}</div>}
+
             <div style={F.actions}>
                 <button type="button" onClick={onCancel} style={F.btnGhost} className="ix-btn-ghost">
                     Annulla
                 </button>
-                <button type="submit" disabled={!form.nome.trim() || !form.importo} style={F.btnPrimary} className="ix-btn-primary">
-                    💾 Salva
+                <button
+                    type="submit"
+                    disabled={saving || !form.nome.trim() || !form.importo}
+                    style={F.btnPrimary}
+                    className="ix-btn-primary"
+                >
+                    {saving ? 'Salvataggio…' : '💾 Salva'}
                 </button>
             </div>
         </form>
@@ -453,6 +484,20 @@ const S = {
         color: 'var(--text-muted)',
         lineHeight: 1.5,
     },
+    toast: {
+        position: 'fixed',
+        bottom: 'calc(16px + var(--safe-bottom))',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        background: 'var(--danger-soft)',
+        border: '1px solid var(--danger-ring)',
+        color: 'var(--danger)',
+        padding: '10px 16px',
+        borderRadius: 'var(--radius-md)',
+        fontSize: 13,
+        boxShadow: 'var(--shadow-md)',
+        zIndex: 1100,
+    },
 }
 
 const F = {
@@ -510,5 +555,13 @@ const F = {
         fontWeight: 700,
         fontSize: 14,
         boxShadow: 'var(--shadow-coral)',
+    },
+    error: {
+        padding: '10px 12px',
+        background: 'var(--danger-soft)',
+        border: '1px solid var(--danger-ring)',
+        borderRadius: 'var(--radius-sm)',
+        color: 'var(--danger)',
+        fontSize: 13,
     },
 }

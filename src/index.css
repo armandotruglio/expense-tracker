@@ -228,6 +228,10 @@ textarea:focus-visible {
     grid-template-columns: 1fr !important;
   }
 
+  .chart-grid {
+    grid-template-columns: 1fr !important;
+  }
+
   .hide-mobile {
     display: none !important;
   }
