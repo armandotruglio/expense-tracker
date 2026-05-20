@@ -9,21 +9,47 @@ export default function App() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#0f0f1e', color: '#a0a0a0' }}>
-        Caricamento…
+      <div style={loadingStyles}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={spinnerStyles} aria-hidden="true" />
+          <span>Caricamento…</span>
+        </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     )
   }
 
-  if (!session) return <Login />
-
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/categorie" element={<Categorie />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      {!session ? (
+        <Routes>
+          <Route path="*" element={<Login />} />
+        </Routes>
+      ) : (
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/categorie" element={<Categorie />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      )}
     </BrowserRouter>
   )
+}
+
+const loadingStyles = {
+  minHeight: '100vh',
+  display: 'grid',
+  placeItems: 'center',
+  background: 'var(--bg)',
+  color: 'var(--text-muted)',
+  fontFamily: 'var(--font-sans)',
+}
+
+const spinnerStyles = {
+  width: 18,
+  height: 18,
+  border: '2px solid rgba(255,255,255,0.15)',
+  borderTopColor: 'var(--accent)',
+  borderRadius: '50%',
+  animation: 'spin 0.8s linear infinite',
 }
