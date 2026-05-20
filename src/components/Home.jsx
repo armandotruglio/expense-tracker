@@ -4,14 +4,20 @@ import { useAuth } from '../hooks/useAuth'
 import { useCategorie } from '../hooks/useCategorie'
 import { useTransazioni } from '../hooks/useTransazioni'
 import {
-    formatEUR, formatData, oggiISO,
+    formatEUR, formatData,
     meseISO, intervalloMese, meseLabel, mesePrec, meseSucc,
 } from '../utils/format'
 import GraficoSpese from './GraficoSpese'
 import FiltriTransazioni from './FiltriTransazioni'
 import Modal from './Modal'
+import ConfirmDialog from './ConfirmDialog'
 import Collapsible from './Collapsible'
 import TransazioneForm from './TransazioneForm'
+
+const FILTRI_INIZIALI = {
+    search: '', tipo: 'tutti', categorieSel: [],
+    importoMin: '', importoMax: '', dataDa: '', dataA: '', ordine: 'data_desc',
+}
 
 export default function Home() {
     const { user, signOut } = useAuth()
@@ -22,8 +28,9 @@ export default function Home() {
     const { transazioni, loading: txLoading, aggiungi, modifica, elimina } =
         useTransazioni({ from, to })
 
-    // modale: { mode: 'create' | 'edit', tx?: {...} } oppure null
     const [modal, setModal] = useState(null)
+    const [toDelete, setToDelete] = useState(null) // { id, descrizione }
+    const [filtri, setFiltri] = useState(FILTRI_INIZIALI)
 
     async function handleFormSubmit(payload) {
         if (modal?.mode === 'edit') {
@@ -34,15 +41,8 @@ export default function Home() {
         setModal(null)
     }
 
-    // ---- FILTRI ----
-    const FILTRI_INIZIALI = {
-        search: '', tipo: 'tutti', categorieSel: [],
-        importoMin: '', importoMax: '', dataDa: '', dataA: '', ordine: 'data_desc',
-    }
-    const [filtri, setFiltri] = useState(FILTRI_INIZIALI)
     const resetFiltri = () => setFiltri(FILTRI_INIZIALI)
 
-    // conteggio filtri attivi (per badge sul collassabile)
     const nFiltriAttivi = useMemo(() => {
         let n = 0
         if (filtri.search.trim()) n++
@@ -87,7 +87,18 @@ export default function Home() {
         totaleEntrate: transazioniFiltrate.filter(t => t.tipo === 'entrata').reduce((s, t) => s + Number(t.importo), 0),
     }), [transazioniFiltrate])
 
-    // totali del mese (per le card, sempre sul mese intero)
+    // raggruppamento per giorno (solo se ordine cronologico)
+    const groupByDay = filtri.ordine === 'data_desc' || filtri.ordine === 'data_asc'
+    const gruppi = useMemo(() => {
+        if (!groupByDay) return null
+        const map = new Map()
+        for (const t of transazioniFiltrate) {
+            if (!map.has(t.data)) map.set(t.data, [])
+            map.get(t.data).push(t)
+        }
+        return Array.from(map.entries())
+    }, [transazioniFiltrate, groupByDay])
+
     const totSpese = transazioni.filter(t => t.tipo === 'spesa').reduce((s, t) => s + Number(t.importo), 0)
     const totEntrate = transazioni.filter(t => t.tipo === 'entrata').reduce((s, t) => s + Number(t.importo), 0)
     const saldo = totEntrate - totSpese
@@ -101,46 +112,101 @@ export default function Home() {
     return (
         <div style={S.app}>
             <header style={S.header}>
-                <div>
+                <div style={S.headerLeft}>
                     <h1 style={S.title}>💰 Expense Tracker</h1>
-                    <p style={S.userline}>{user?.email}</p>
+                    <p style={S.userline} className="hide-mobile">{user?.email}</p>
                 </div>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <button onClick={() => setModal({ mode: 'create' })} style={S.btnAdd}>+ Nuova transazione</button>
-                    <Link to="/categorie" style={S.btnGhost}>🏷️ Categorie</Link>
-                    <button onClick={signOut} style={S.btnGhost}>Esci</button>
+                <div style={S.headerActions}>
+                    <button
+                        onClick={() => setModal({ mode: 'create' })}
+                        style={S.btnAdd}
+                        className="ix-btn-primary hide-mobile"
+                    >
+                        + Nuova transazione
+                    </button>
+                    <Link
+                        to="/categorie"
+                        style={S.btnGhost}
+                        className="ix-btn-ghost"
+                        aria-label="Gestisci categorie"
+                    >
+                        <span aria-hidden="true">🏷️</span>
+                        <span className="hide-mobile">Categorie</span>
+                    </Link>
+                    <button
+                        onClick={signOut}
+                        style={S.btnGhost}
+                        className="ix-btn-ghost"
+                        aria-label="Esci dall'account"
+                    >
+                        <span className="hide-mobile">Esci</span>
+                        <span className="show-mobile-only" aria-hidden="true">⎋</span>
+                    </button>
                 </div>
             </header>
 
             {/* SELETTORE MESE */}
-            <section style={S.monthBar}>
-                <button onClick={() => setMese(mesePrec(mese))} style={S.monthNav}>◀</button>
+            <section style={S.monthBar} aria-label="Selettore mese">
+                <button
+                    onClick={() => setMese(mesePrec(mese))}
+                    style={S.monthNav}
+                    className="ix-btn-ghost"
+                    aria-label="Mese precedente"
+                >
+                    ◀
+                </button>
                 <div style={S.monthCenter}>
                     <div style={S.monthLabel}>{meseLabel(mese)}</div>
-                    {!isMeseCorrente && <button onClick={() => setMese(oggi)} style={S.monthToday}>Vai a oggi</button>}
+                    {!isMeseCorrente && (
+                        <button onClick={() => setMese(oggi)} style={S.monthToday}>
+                            Vai a oggi
+                        </button>
+                    )}
                 </div>
-                <button onClick={() => setMese(meseSucc(mese))} style={S.monthNav}>▶</button>
+                <button
+                    onClick={() => setMese(meseSucc(mese))}
+                    style={S.monthNav}
+                    className="ix-btn-ghost"
+                    aria-label="Mese successivo"
+                >
+                    ▶
+                </button>
             </section>
 
             {/* CARDS */}
-            <section style={S.cards} className="grid-cards">
-                <Card label="Entrate" value={formatEUR(totEntrate)} color="#00d4aa" />
-                <Card label="Spese" value={formatEUR(totSpese)} color="#ff6b6b" />
-                <Card label="Saldo" value={formatEUR(saldo)} color={saldo >= 0 ? '#00d4aa' : '#ff6b6b'} />
+            <section style={S.cards} className="grid-cards" aria-label="Riepilogo mese">
+                <Card label="Entrate" value={formatEUR(totEntrate)} color="var(--success)" />
+                <Card label="Spese" value={formatEUR(totSpese)} color="var(--danger)" />
+                <Card label="Saldo" value={formatEUR(saldo)} color={saldo >= 0 ? 'var(--success)' : 'var(--danger)'} />
             </section>
 
             {/* BUDGET */}
             {budgetTotale > 0 && (
-                <section style={S.budgetCard}>
+                <section style={S.budgetCard} aria-label="Budget del mese">
                     <div style={S.budgetHead}>
                         <span style={S.budgetLabel}>Budget totale del mese</span>
-                        <span style={S.budgetVal}>{formatEUR(totSpese)} <span style={{ color: '#a0a0a0' }}>/ {formatEUR(budgetTotale)}</span></span>
+                        <span style={S.budgetVal}>
+                            {formatEUR(totSpese)}
+                            <span style={{ color: 'var(--text-muted)' }}> / {formatEUR(budgetTotale)}</span>
+                        </span>
                     </div>
-                    <div style={S.progress}>
-                        <div style={{ ...S.progressBar, width: `${pctBudget}%`, background: pctBudget >= 100 ? '#ff6b6b' : pctBudget >= 80 ? '#ffb319' : '#00d4aa' }} />
+                    <div
+                        style={S.progress}
+                        role="progressbar"
+                        aria-valuenow={Math.round(pctBudget)}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                    >
+                        <div style={{
+                            ...S.progressBar,
+                            width: `${pctBudget}%`,
+                            background: pctBudget >= 100 ? 'var(--danger)' : pctBudget >= 80 ? 'var(--warning)' : 'var(--success)',
+                        }} />
                     </div>
                     <div style={S.budgetFoot}>
-                        {pctBudget >= 100 ? `⚠️ Hai superato il budget di ${formatEUR(totSpese - budgetTotale)}` : `Restano ${formatEUR(budgetTotale - totSpese)} (${(100 - pctBudget).toFixed(0)}%)`}
+                        {pctBudget >= 100
+                            ? `⚠️ Hai superato il budget di ${formatEUR(totSpese - budgetTotale)}`
+                            : `Restano ${formatEUR(budgetTotale - totSpese)} (${(100 - pctBudget).toFixed(0)}%)`}
                     </div>
                 </section>
             )}
@@ -148,9 +214,7 @@ export default function Home() {
             {/* GRAFICO */}
             <GraficoSpese transazioni={transazioni} categorie={categorie} />
 
-            {/* ===== ZONA ESPLORA (filtri + lista uniti) ===== */}
-
-            {/* Filtri collassabili */}
+            {/* FILTRI collassabili */}
             <Collapsible title="🔎 Filtri" badge={nFiltriAttivi} defaultOpen={false}>
                 <FiltriTransazioni
                     categorie={categorie}
@@ -160,65 +224,91 @@ export default function Home() {
                 />
             </Collapsible>
 
-            {/* Lista con riepilogo sempre visibile attaccato sopra */}
-            <section style={S.section}>
+            {/* LISTA */}
+            <section style={S.section} aria-label="Lista transazioni">
                 <div style={S.listHead}>
                     <h2 style={S.h2}>Transazioni di {meseLabel(mese)}</h2>
-                    {filtroAttivo && <button onClick={resetFiltri} style={S.clearMini}>Azzera filtri</button>}
+                    {filtroAttivo && (
+                        <button
+                            onClick={resetFiltri}
+                            style={S.clearMini}
+                            className="ix-btn-ghost"
+                        >
+                            Azzera filtri
+                        </button>
+                    )}
                 </div>
 
-                {/* RIEPILOGO RISULTATI — sempre visibile */}
                 <div style={S.summary}>
                     <span style={S.summaryCount}>
                         {risultatiFiltro.count} {risultatiFiltro.count === 1 ? 'transazione' : 'transazioni'}
                         {filtroAttivo && <span style={S.filteredTag}> (filtrate)</span>}
                     </span>
                     <span style={S.summaryAmts}>
-                        {risultatiFiltro.totaleEntrate > 0 && <span style={{ color: '#00d4aa' }}>+{formatEUR(risultatiFiltro.totaleEntrate)}</span>}
-                        {risultatiFiltro.totaleSpese > 0 && <span style={{ color: '#ff6b6b' }}>−{formatEUR(risultatiFiltro.totaleSpese)}</span>}
+                        {risultatiFiltro.totaleEntrate > 0 && (
+                            <span style={{ color: 'var(--success)' }}>+{formatEUR(risultatiFiltro.totaleEntrate)}</span>
+                        )}
+                        {risultatiFiltro.totaleSpese > 0 && (
+                            <span style={{ color: 'var(--danger)' }}>−{formatEUR(risultatiFiltro.totaleSpese)}</span>
+                        )}
                     </span>
                 </div>
 
-                {/* CHIP filtri attivi */}
                 {filtroAttivo && (
                     <ChipsAttivi filtri={filtri} setFiltri={setFiltri} categorie={categorie} />
                 )}
 
-                {/* LISTA */}
                 {txLoading ? (
-                    <p style={S.muted}>Caricamento…</p>
+                    <SkeletonList />
                 ) : transazioniFiltrate.length === 0 ? (
-                    <p style={S.muted}>{transazioni.length === 0 ? 'Nessuna transazione in questo mese' : 'Nessuna transazione corrisponde ai filtri'}</p>
+                    <EmptyState
+                        title={transazioni.length === 0 ? 'Nessuna transazione' : 'Nessun risultato'}
+                        message={transazioni.length === 0
+                            ? `Nessuna transazione registrata in ${meseLabel(mese)}.`
+                            : 'Prova a modificare o azzerare i filtri.'}
+                        action={transazioni.length === 0
+                            ? { label: '+ Aggiungi la prima', onClick: () => setModal({ mode: 'create' }) }
+                            : { label: 'Azzera filtri', onClick: resetFiltri }}
+                    />
+                ) : groupByDay && gruppi ? (
+                    <div style={S.groupsWrap}>
+                        {gruppi.map(([giorno, txs], i) => (
+                            <GiornoGruppo
+                                key={giorno}
+                                giorno={giorno}
+                                transazioni={txs}
+                                onEdit={(t) => setModal({ mode: 'edit', tx: t })}
+                                onDelete={(t) => setToDelete(t)}
+                                delay={i}
+                            />
+                        ))}
+                    </div>
                 ) : (
                     <ul style={S.list}>
-                        {transazioniFiltrate.map(t => (
-                            <li key={t.id} style={S.item}>
-                                <div style={S.itemLeft}>
-                                    <div style={{ ...S.itemIcon, background: t.categoria?.colore ? `${t.categoria.colore}22` : 'rgba(255,255,255,.04)' }}>
-                                        {t.categoria?.icona ?? '📄'}
-                                    </div>
-                                    <div>
-                                        <div style={S.itemTitle}>{t.descrizione || t.categoria?.nome || '(senza descrizione)'}</div>
-                                        <div style={S.itemSub}>{formatData(t.data)} · {t.categoria?.nome ?? 'senza categoria'}</div>
-                                    </div>
-                                </div>
-                                <div style={S.itemRight}>
-                                    <div style={{ ...S.amount, color: t.tipo === 'spesa' ? '#ff6b6b' : '#00d4aa' }}>
-                                        {t.tipo === 'spesa' ? '−' : '+'}{formatEUR(t.importo)}
-                                    </div>
-                                    <button onClick={() => setModal({ mode: 'edit', tx: t })} style={S.btnIcon} title="Modifica">✏️</button>
-                                    <button onClick={() => { if (confirm('Eliminare questa transazione?')) elimina(t.id) }} style={S.btnIcon} title="Elimina">🗑️</button>
-                                </div>
-                            </li>
+                        {transazioniFiltrate.map((t, i) => (
+                            <TransazioneRow
+                                key={t.id}
+                                t={t}
+                                onEdit={() => setModal({ mode: 'edit', tx: t })}
+                                onDelete={() => setToDelete(t)}
+                                delay={i}
+                            />
                         ))}
                     </ul>
                 )}
             </section>
 
-            {/* FAB — sempre visibile */}
-            <button onClick={() => setModal({ mode: 'create' })} style={S.fab} title="Nuova transazione">+</button>
+            {/* FAB */}
+            <button
+                onClick={() => setModal({ mode: 'create' })}
+                style={S.fab}
+                className="ix-fab"
+                aria-label="Aggiungi nuova transazione"
+            >
+                <span aria-hidden="true">+</span>
+            </button>
 
-            {/* MODALE */}
+            {/* MODALE FORM */}
             <Modal
                 open={modal !== null}
                 onClose={() => setModal(null)}
@@ -232,20 +322,117 @@ export default function Home() {
                     onCancel={() => setModal(null)}
                 />
             </Modal>
+
+            {/* CONFERMA ELIMINAZIONE */}
+            <ConfirmDialog
+                open={toDelete !== null}
+                title="Eliminare transazione?"
+                message={toDelete
+                    ? `Stai per eliminare:\n"${toDelete.descrizione || toDelete.categoria?.nome || 'transazione senza descrizione'}" da ${formatData(toDelete.data)}.\n\nL'operazione non può essere annullata.`
+                    : ''}
+                confirmLabel="Elimina"
+                danger
+                onConfirm={async () => {
+                    if (toDelete) await elimina(toDelete.id)
+                    setToDelete(null)
+                }}
+                onCancel={() => setToDelete(null)}
+            />
         </div>
     )
 }
 
 function Card({ label, value, color }) {
     return (
-        <div style={S.card}>
+        <div style={S.card} className="ix-lift">
             <div style={S.cardLabel}>{label}</div>
             <div style={{ ...S.cardValue, color }}>{value}</div>
         </div>
     )
 }
 
-// chip dei filtri attivi (versione compatta inline)
+function GiornoGruppo({ giorno, transazioni, onEdit, onDelete, delay = 0 }) {
+    const totale = transazioni.reduce(
+        (s, t) => s + (t.tipo === 'spesa' ? -1 : 1) * Number(t.importo), 0
+    )
+    return (
+        <div className="list-enter" style={{ animationDelay: `${delay * 20}ms` }}>
+            <div style={S.gruppoHead}>
+                <span style={S.gruppoData}>{labelGiorno(giorno)}</span>
+                <span style={{
+                    ...S.gruppoTot,
+                    color: totale >= 0 ? 'var(--success)' : 'var(--danger)',
+                }}>
+                    {totale >= 0 ? '+' : '−'}{formatEUR(Math.abs(totale))}
+                </span>
+            </div>
+            <ul style={S.list}>
+                {transazioni.map((t, i) => (
+                    <TransazioneRow
+                        key={t.id}
+                        t={t}
+                        onEdit={() => onEdit(t)}
+                        onDelete={() => onDelete(t)}
+                        delay={i}
+                        hideData
+                    />
+                ))}
+            </ul>
+        </div>
+    )
+}
+
+function TransazioneRow({ t, onEdit, onDelete, hideData = false, delay = 0 }) {
+    return (
+        <li
+            style={{ ...S.item, animationDelay: `${Math.min(delay, 8) * 20}ms` }}
+            className="ix-item list-enter"
+        >
+            <div style={S.itemLeft}>
+                <div style={{
+                    ...S.itemIcon,
+                    background: t.categoria?.colore ? `${t.categoria.colore}22` : 'rgba(255,255,255,.04)',
+                }}>
+                    <span aria-hidden="true">{t.categoria?.icona ?? '📄'}</span>
+                </div>
+                <div style={{ minWidth: 0 }}>
+                    <div style={S.itemTitle}>
+                        {t.descrizione || t.categoria?.nome || '(senza descrizione)'}
+                    </div>
+                    <div style={S.itemSub}>
+                        {hideData ? (t.categoria?.nome ?? 'senza categoria')
+                            : `${formatData(t.data)} · ${t.categoria?.nome ?? 'senza categoria'}`}
+                    </div>
+                </div>
+            </div>
+            <div style={S.itemRight}>
+                <div style={{
+                    ...S.amount,
+                    color: t.tipo === 'spesa' ? 'var(--danger)' : 'var(--success)',
+                }}>
+                    {t.tipo === 'spesa' ? '−' : '+'}{formatEUR(t.importo)}
+                </div>
+                <button
+                    onClick={onEdit}
+                    style={S.btnIcon}
+                    className="ix-btn-icon"
+                    aria-label={`Modifica transazione "${t.descrizione || t.categoria?.nome || ''}"`}
+                >
+                    <span aria-hidden="true">✏️</span>
+                </button>
+                <button
+                    onClick={onDelete}
+                    style={S.btnIcon}
+                    className="ix-btn-icon"
+                    aria-label={`Elimina transazione "${t.descrizione || t.categoria?.nome || ''}"`}
+                >
+                    <span aria-hidden="true">🗑️</span>
+                </button>
+            </div>
+        </li>
+    )
+}
+
 function ChipsAttivi({ filtri, setFiltri, categorie }) {
     const set = (campo, valore) => setFiltri(prev => ({ ...prev, [campo]: valore }))
     const toggleCat = (id) => setFiltri(prev => ({ ...prev, categorieSel: prev.categorieSel.filter(c => c !== id) }))
@@ -259,64 +446,339 @@ function ChipsAttivi({ filtri, setFiltri, categorie }) {
     })
     if (filtri.importoMin !== '') chips.push({ k: 'min', label: `≥ ${formatEUR(filtri.importoMin)}`, rm: () => set('importoMin', '') })
     if (filtri.importoMax !== '') chips.push({ k: 'max', label: `≤ ${formatEUR(filtri.importoMax)}`, rm: () => set('importoMax', '') })
-    if (filtri.dataDa) chips.push({ k: 'dd', label: `da ${filtri.dataDa}`, rm: () => set('dataDa', '') })
-    if (filtri.dataA) chips.push({ k: 'da', label: `a ${filtri.dataA}`, rm: () => set('dataA', '') })
+    if (filtri.dataDa) chips.push({ k: 'dd', label: `da ${formatData(filtri.dataDa)}`, rm: () => set('dataDa', '') })
+    if (filtri.dataA) chips.push({ k: 'da', label: `a ${formatData(filtri.dataA)}`, rm: () => set('dataA', '') })
 
     return (
         <div style={S.chips}>
             {chips.map(c => (
                 <span key={c.k} style={S.chip}>
                     {c.label}
-                    <button onClick={c.rm} style={S.chipX}>✕</button>
+                    <button
+                        onClick={c.rm}
+                        style={S.chipX}
+                        aria-label={`Rimuovi filtro ${c.label}`}
+                    >
+                        ✕
+                    </button>
                 </span>
             ))}
         </div>
     )
 }
 
+function SkeletonList() {
+    return (
+        <div style={S.skelWrap} aria-hidden="true">
+            {[0, 1, 2].map(i => (
+                <div key={i} style={S.skelItem}>
+                    <div style={S.skelIcon} />
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <div style={{ ...S.skelLine, width: '60%' }} />
+                        <div style={{ ...S.skelLine, width: '40%', height: 10 }} />
+                    </div>
+                    <div style={{ ...S.skelLine, width: 60 }} />
+                </div>
+            ))}
+            <style>{`@keyframes shimmer { 0%{background-position:-200px 0;} 100%{background-position:200px 0;} }`}</style>
+        </div>
+    )
+}
+
+function EmptyState({ title, message, action }) {
+    return (
+        <div style={S.empty}>
+            <div style={S.emptyIcon} aria-hidden="true">📭</div>
+            <div style={S.emptyTitle}>{title}</div>
+            <div style={S.emptyMsg}>{message}</div>
+            {action && (
+                <button
+                    onClick={action.onClick}
+                    style={S.emptyBtn}
+                    className="ix-btn-primary"
+                >
+                    {action.label}
+                </button>
+            )}
+        </div>
+    )
+}
+
+function labelGiorno(iso) {
+    const [y, m, d] = iso.split('-').map(Number)
+    const data = new Date(y, m - 1, d)
+    const oggi = new Date(); oggi.setHours(0, 0, 0, 0)
+    const ieri = new Date(oggi); ieri.setDate(ieri.getDate() - 1)
+    const dataMid = new Date(data); dataMid.setHours(0, 0, 0, 0)
+    if (dataMid.getTime() === oggi.getTime()) return 'Oggi'
+    if (dataMid.getTime() === ieri.getTime()) return 'Ieri'
+    return data.toLocaleDateString('it-IT', { weekday: 'long', day: '2-digit', month: 'long' })
+}
+
 const S = {
-    app: { minHeight: '100vh', background: 'radial-gradient(circle at 30% 0%, rgba(233,69,96,.08), transparent 50%), radial-gradient(circle at 80% 100%, rgba(0,212,170,.06), transparent 50%), #0f0f1e', color: '#e6e6e6', fontFamily: 'system-ui, -apple-system, sans-serif', padding: 'clamp(1rem, 4vw, 3rem)', paddingBottom: '100px', boxSizing: 'border-box' },
-    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 },
-    title: { margin: 0, fontSize: 28, fontWeight: 700 },
-    userline: { margin: '4px 0 0', color: '#a0a0a0', fontSize: 13 },
-    btnAdd: { padding: '8px 16px', background: 'linear-gradient(135deg, #e94560, #ff6b6b)', border: 'none', borderRadius: 8, color: 'white', cursor: 'pointer', fontSize: 13, fontWeight: 600, display: 'inline-flex', alignItems: 'center', lineHeight: 1.4 },
-    btnGhost: { padding: '8px 16px', background: 'transparent', border: '1px solid rgba(255,255,255,.15)', borderRadius: 8, color: '#e6e6e6', cursor: 'pointer', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', lineHeight: 1.4 },
-    btnIcon: { background: 'transparent', backgroundColor: 'transparent', border: 'none', outline: 'none', cursor: 'pointer', fontSize: 18, padding: 6, opacity: .7, borderRadius: 8, lineHeight: 1, WebkitAppearance: 'none', appearance: 'none' },
-    monthBar: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#1e1e2f', borderRadius: 14, padding: '10px 16px', border: '1px solid rgba(255,255,255,.05)', marginBottom: 24 },
-    monthNav: { width: 40, height: 40, borderRadius: 10, background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)', color: '#e6e6e6', cursor: 'pointer', fontSize: 14 },
+    app: {
+        minHeight: '100vh',
+        background: 'var(--grad-bg)',
+        color: 'var(--text)',
+        padding: 'clamp(1rem, 4vw, 3rem)',
+        paddingTop: 'calc(clamp(1rem, 4vw, 3rem) + var(--safe-top))',
+        paddingBottom: 'calc(100px + var(--safe-bottom))',
+    },
+    header: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 24,
+        gap: 12,
+    },
+    headerLeft: { minWidth: 0, flex: '1 1 auto' },
+    headerActions: { display: 'flex', gap: 8, flexShrink: 0, alignItems: 'center' },
+    title: { margin: 0, fontSize: 'clamp(20px, 4vw, 28px)', fontWeight: 700 },
+    userline: { margin: '4px 0 0', color: 'var(--text-muted)', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+    btnAdd: {
+        padding: '10px 16px',
+        background: 'var(--grad-accent)',
+        border: 'none',
+        borderRadius: 'var(--radius-sm)',
+        color: 'white',
+        fontSize: 13,
+        fontWeight: 600,
+        display: 'inline-flex',
+        alignItems: 'center',
+        lineHeight: 1.4,
+    },
+    btnGhost: {
+        padding: '10px 14px',
+        background: 'transparent',
+        border: '1px solid var(--border-strong)',
+        borderRadius: 'var(--radius-sm)',
+        color: 'var(--text)',
+        fontSize: 13,
+        textDecoration: 'none',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        lineHeight: 1.4,
+        minHeight: 38,
+    },
+    btnIcon: {
+        background: 'transparent',
+        border: 'none',
+        fontSize: 18,
+        padding: 8,
+        opacity: .7,
+        borderRadius: 'var(--radius-sm)',
+        lineHeight: 1,
+        minWidth: 36,
+        minHeight: 36,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    monthBar: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        background: 'var(--surface)',
+        borderRadius: 'var(--radius-lg)',
+        padding: '10px 16px',
+        border: '1px solid var(--border-subtle)',
+        marginBottom: 24,
+    },
+    monthNav: {
+        width: 40,
+        height: 40,
+        borderRadius: 'var(--radius-md)',
+        background: 'rgba(255,255,255,.04)',
+        border: '1px solid var(--border)',
+        color: 'var(--text)',
+        fontSize: 14,
+    },
     monthCenter: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 },
     monthLabel: { fontSize: 18, fontWeight: 600 },
-    monthToday: { fontSize: 11, color: '#e94560', background: 'transparent', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0 },
-    cards: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 16 },
-    card: { background: '#1e1e2f', padding: '20px', borderRadius: 14, border: '1px solid rgba(255,255,255,.05)' },
-    cardLabel: { color: '#a0a0a0', fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 },
+    monthToday: {
+        fontSize: 12,
+        color: 'var(--accent)',
+        background: 'transparent',
+        border: 'none',
+        textDecoration: 'underline',
+        padding: 0,
+    },
+    cards: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+        gap: 16,
+        marginBottom: 16,
+    },
+    card: {
+        background: 'var(--surface)',
+        padding: 20,
+        borderRadius: 'var(--radius-lg)',
+        border: '1px solid var(--border-subtle)',
+    },
+    cardLabel: { color: 'var(--text-muted)', fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 },
     cardValue: { fontSize: 24, fontWeight: 700, marginTop: 8 },
-    budgetCard: { background: '#1e1e2f', padding: 20, borderRadius: 14, border: '1px solid rgba(255,255,255,.05)', marginBottom: 24 },
-    budgetHead: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-    budgetLabel: { color: '#a0a0a0', fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 },
+    budgetCard: {
+        background: 'var(--surface)',
+        padding: 20,
+        borderRadius: 'var(--radius-lg)',
+        border: '1px solid var(--border-subtle)',
+        marginBottom: 24,
+    },
+    budgetHead: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 8 },
+    budgetLabel: { color: 'var(--text-muted)', fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 },
     budgetVal: { fontSize: 16, fontWeight: 600 },
-    progress: { height: 8, background: 'rgba(255,255,255,.06)', borderRadius: 999, overflow: 'hidden' },
-    progressBar: { height: '100%', borderRadius: 999, transition: 'width .3s' },
-    budgetFoot: { marginTop: 8, fontSize: 12, color: '#a0a0a0' },
-    section: { background: '#1e1e2f', padding: 24, borderRadius: 14, border: '1px solid rgba(255,255,255,.05)', marginBottom: 24 },
-    listHead: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+    progress: {
+        height: 8,
+        background: 'rgba(255,255,255,.06)',
+        borderRadius: 'var(--radius-pill)',
+        overflow: 'hidden',
+    },
+    progressBar: { height: '100%', borderRadius: 'var(--radius-pill)', transition: 'width .3s ease, background .3s' },
+    budgetFoot: { marginTop: 8, fontSize: 12, color: 'var(--text-muted)' },
+    section: {
+        background: 'var(--surface)',
+        padding: 24,
+        borderRadius: 'var(--radius-lg)',
+        border: '1px solid var(--border-subtle)',
+        marginBottom: 24,
+    },
+    listHead: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, gap: 8, flexWrap: 'wrap' },
     h2: { margin: 0, fontSize: 18 },
-    clearMini: { background: 'transparent', border: '1px solid rgba(255,255,255,.15)', borderRadius: 8, color: '#a0a0a0', cursor: 'pointer', fontSize: 12, padding: '4px 10px' },
-    summary: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', background: '#0f0f1e', borderRadius: 10, marginBottom: 12 },
-    summaryCount: { color: '#e6e6e6', fontSize: 14, fontWeight: 500 },
-    filteredTag: { color: '#e94560', fontSize: 12 },
+    clearMini: {
+        background: 'transparent',
+        border: '1px solid var(--border-strong)',
+        borderRadius: 'var(--radius-sm)',
+        color: 'var(--text-muted)',
+        fontSize: 12,
+        padding: '6px 12px',
+    },
+    summary: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 14px',
+        background: 'var(--bg)',
+        borderRadius: 'var(--radius-md)',
+        marginBottom: 12,
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    summaryCount: { color: 'var(--text)', fontSize: 14, fontWeight: 500 },
+    filteredTag: { color: 'var(--accent)', fontSize: 12 },
     summaryAmts: { display: 'flex', gap: 12, fontSize: 14, fontWeight: 600 },
     chips: { display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
-    chip: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 6px 4px 12px', background: 'rgba(233,69,96,.12)', border: '1px solid rgba(233,69,96,.3)', borderRadius: 999, color: '#e6e6e6', fontSize: 12 },
-    chipX: { background: 'transparent', border: 'none', color: '#e94560', cursor: 'pointer', fontSize: 12, padding: '0 4px', lineHeight: 1 },
+    chip: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '4px 6px 4px 12px',
+        background: 'var(--accent-soft-2)',
+        border: '1px solid var(--accent-ring)',
+        borderRadius: 'var(--radius-pill)',
+        color: 'var(--text)',
+        fontSize: 12,
+    },
+    chipX: {
+        background: 'transparent',
+        border: 'none',
+        color: 'var(--accent)',
+        fontSize: 12,
+        padding: '0 4px',
+        lineHeight: 1,
+    },
     list: { listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 },
-    item: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', background: '#0f0f1e', borderRadius: 10, border: '1px solid rgba(255,255,255,.04)' },
-    itemLeft: { display: 'flex', alignItems: 'center', gap: 12 },
-    itemIcon: { fontSize: 22, width: 40, height: 40, display: 'grid', placeItems: 'center', borderRadius: 10 },
-    itemTitle: { fontSize: 14, fontWeight: 500 },
-    itemSub: { fontSize: 12, color: '#a0a0a0', marginTop: 2 },
-    itemRight: { display: 'flex', alignItems: 'center', gap: 12 },
-    amount: { fontWeight: 600, fontSize: 15 },
-    muted: { color: '#a0a0a0', fontSize: 14, textAlign: 'center', padding: 20 },
-    fab: { position: 'fixed', right: 'clamp(16px, 4vw, 32px)', bottom: 'clamp(16px, 4vw, 32px)', width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg, #e94560, #ff6b6b)', border: 'none', color: 'white', fontSize: 28, cursor: 'pointer', boxShadow: '0 6px 20px rgba(233,69,96,.45)', zIndex: 100, display: 'grid', placeItems: 'center', lineHeight: 1, transition: 'transform .15s' },
+    groupsWrap: { display: 'flex', flexDirection: 'column', gap: 18 },
+    gruppoHead: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'baseline',
+        padding: '0 4px 8px',
+        marginBottom: 4,
+        borderBottom: '1px solid var(--border-subtle)',
+    },
+    gruppoData: { color: 'var(--text-muted)', fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 },
+    gruppoTot: { fontSize: 13, fontWeight: 600 },
+    item: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 14px',
+        background: 'var(--bg)',
+        borderRadius: 'var(--radius-md)',
+        border: '1px solid var(--border-subtle)',
+        gap: 12,
+    },
+    itemLeft: { display: 'flex', alignItems: 'center', gap: 12, minWidth: 0, flex: 1 },
+    itemIcon: {
+        fontSize: 22,
+        width: 40,
+        height: 40,
+        display: 'grid',
+        placeItems: 'center',
+        borderRadius: 'var(--radius-md)',
+        flexShrink: 0,
+    },
+    itemTitle: { fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+    itemSub: { fontSize: 12, color: 'var(--text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+    itemRight: { display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 },
+    amount: { fontWeight: 600, fontSize: 15, marginRight: 4 },
+    // EMPTY
+    empty: { textAlign: 'center', padding: '32px 20px' },
+    emptyIcon: { fontSize: 48, marginBottom: 12, opacity: 0.6 },
+    emptyTitle: { fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 6 },
+    emptyMsg: { color: 'var(--text-muted)', fontSize: 14, marginBottom: 16 },
+    emptyBtn: {
+        padding: '10px 18px',
+        background: 'var(--grad-accent)',
+        border: 'none',
+        borderRadius: 'var(--radius-md)',
+        color: 'white',
+        fontWeight: 600,
+        fontSize: 13,
+    },
+    // SKELETON
+    skelWrap: { display: 'flex', flexDirection: 'column', gap: 8 },
+    skelItem: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        padding: '12px 14px',
+        background: 'var(--bg)',
+        borderRadius: 'var(--radius-md)',
+        border: '1px solid var(--border-subtle)',
+    },
+    skelIcon: {
+        width: 40,
+        height: 40,
+        borderRadius: 'var(--radius-md)',
+        background: 'linear-gradient(90deg, rgba(255,255,255,.04), rgba(255,255,255,.08), rgba(255,255,255,.04))',
+        backgroundSize: '400px 100%',
+        animation: 'shimmer 1.4s linear infinite',
+    },
+    skelLine: {
+        height: 12,
+        borderRadius: 6,
+        background: 'linear-gradient(90deg, rgba(255,255,255,.04), rgba(255,255,255,.08), rgba(255,255,255,.04))',
+        backgroundSize: '400px 100%',
+        animation: 'shimmer 1.4s linear infinite',
+    },
+    // FAB
+    fab: {
+        position: 'fixed',
+        right: 'clamp(16px, 4vw, 32px)',
+        bottom: 'calc(clamp(16px, 4vw, 32px) + var(--safe-bottom))',
+        width: 56,
+        height: 56,
+        borderRadius: '50%',
+        background: 'var(--grad-accent)',
+        border: 'none',
+        color: 'white',
+        fontSize: 28,
+        boxShadow: 'var(--shadow-accent)',
+        zIndex: 100,
+        display: 'grid',
+        placeItems: 'center',
+        lineHeight: 1,
+    },
 }
