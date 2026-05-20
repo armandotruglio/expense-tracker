@@ -3,8 +3,7 @@ import { formatEUR } from '../utils/format'
 export default function FiltriTransazioni({
     categorie,
     filtri,
-    setFiltri,
-    risultati,        // { count, totaleSpese, totaleEntrate }
+    setFiltri,        // { count, totaleSpese, totaleEntrate }
     onReset,
 }) {
     const {
@@ -137,32 +136,6 @@ export default function FiltriTransazioni({
                 </div>
             </div>
 
-            {/* CHIP FILTRI ATTIVI */}
-            {hasFiltri && (
-                <div style={S.chips}>
-                    {chips.map(chip => (
-                        <span key={chip.key} style={S.chip}>
-                            {chip.label}
-                            <button onClick={chip.onRemove} style={S.chipX} aria-label="Rimuovi filtro">✕</button>
-                        </span>
-                    ))}
-                </div>
-            )}
-
-            {/* RIEPILOGO RISULTATI */}
-            <div style={S.summary}>
-                <span style={S.summaryCount}>
-                    {risultati.count} {risultati.count === 1 ? 'transazione' : 'transazioni'}
-                </span>
-                <span style={S.summaryAmts}>
-                    {risultati.totaleEntrate > 0 && (
-                        <span style={{ color: '#00d4aa' }}>+{formatEUR(risultati.totaleEntrate)}</span>
-                    )}
-                    {risultati.totaleSpese > 0 && (
-                        <span style={{ color: '#ff6b6b' }}>−{formatEUR(risultati.totaleSpese)}</span>
-                    )}
-                </span>
-            </div>
         </section>
     )
 }
