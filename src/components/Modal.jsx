@@ -5,7 +5,6 @@ export default function Modal({ open, onClose, title, children, size = 'md' }) {
     const lastFocusedRef = useRef(null)
     const titleId = useId()
 
-    // Esc + body scroll lock + focus management
     useEffect(() => {
         if (!open) return
 
@@ -18,7 +17,6 @@ export default function Modal({ open, onClose, title, children, size = 'md' }) {
                 return
             }
             if (e.key === 'Tab' && dialogRef.current) {
-                // focus trap
                 const focusables = dialogRef.current.querySelectorAll(
                     'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
                 )
@@ -39,7 +37,6 @@ export default function Modal({ open, onClose, title, children, size = 'md' }) {
         const prevOverflow = document.body.style.overflow
         document.body.style.overflow = 'hidden'
 
-        // focus iniziale sul primo elemento focusable o sul dialog
         requestAnimationFrame(() => {
             if (!dialogRef.current) return
             const focusable = dialogRef.current.querySelector(
@@ -51,7 +48,6 @@ export default function Modal({ open, onClose, title, children, size = 'md' }) {
         return () => {
             document.removeEventListener('keydown', onKey)
             document.body.style.overflow = prevOverflow
-            // restore focus
             if (lastFocusedRef.current && typeof lastFocusedRef.current.focus === 'function') {
                 lastFocusedRef.current.focus()
             }
@@ -96,9 +92,9 @@ export default function Modal({ open, onClose, title, children, size = 'md' }) {
 const S = {
     overlay: {
         position: 'fixed', inset: 0, zIndex: 1000,
-        background: 'rgba(0,0,0,.6)',
-        backdropFilter: 'blur(4px)',
-        WebkitBackdropFilter: 'blur(4px)',
+        background: 'rgba(42, 27, 61, 0.5)',
+        backdropFilter: 'blur(6px)',
+        WebkitBackdropFilter: 'blur(6px)',
         display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
         padding: '5vh 1rem 1rem',
         overflowY: 'auto',
@@ -107,25 +103,31 @@ const S = {
     modal: {
         background: 'var(--surface)',
         borderRadius: 'var(--radius-xl)',
-        border: '1px solid var(--border)',
+        border: '1px solid var(--line)',
         boxShadow: 'var(--shadow-lg)',
         animation: 'slideUp .2s ease',
         outline: 'none',
     },
     head: {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)',
+        padding: '20px 24px', borderBottom: '1px solid var(--line)',
     },
-    title: { margin: 0, fontSize: 18, color: 'var(--text)' },
+    title: {
+        margin: 0,
+        fontSize: 20,
+        fontFamily: 'var(--font-serif)',
+        fontWeight: 500,
+        letterSpacing: '-0.02em',
+        color: 'var(--text)',
+    },
     close: {
-        background: 'rgba(255,255,255,.05)',
-        border: '1px solid var(--border-strong)',
+        background: 'var(--bg-2)',
+        border: '1px solid var(--line)',
         borderRadius: 'var(--radius-sm)',
         color: 'var(--text)',
         fontSize: 14,
         width: 36, height: 36,
         display: 'grid', placeItems: 'center',
-        opacity: 0.8,
     },
     body: { padding: 24 },
 }

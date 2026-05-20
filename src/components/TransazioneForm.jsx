@@ -2,8 +2,6 @@ import { useState } from 'react'
 import { oggiISO } from '../utils/format'
 
 export default function TransazioneForm({ categorie, catLoading, iniziale, onSubmit, onCancel }) {
-    // Stato inizializzato dalla prop una sola volta.
-    // Per resettare il form (es. modifica vs nuovo) il parent passa una `key` distinta.
     const [data, setData] = useState(iniziale?.data ?? oggiISO())
     const [importo, setImporto] = useState(iniziale ? String(iniziale.importo) : '')
     const [tipo, setTipo] = useState(iniziale?.tipo ?? 'spesa')
@@ -34,7 +32,6 @@ export default function TransazioneForm({ categorie, catLoading, iniziale, onSub
 
     return (
         <form onSubmit={handleSubmit} style={S.form}>
-            {/* Tipo: toggle pill al posto del select */}
             <div style={S.field}>
                 <span style={S.lbl}>Tipo</span>
                 <div style={S.segmented} role="radiogroup" aria-label="Tipo transazione">
@@ -43,10 +40,7 @@ export default function TransazioneForm({ categorie, catLoading, iniziale, onSub
                         role="radio"
                         aria-checked={isSpesa}
                         onClick={() => setTipo('spesa')}
-                        style={{
-                            ...S.segBtn,
-                            ...(isSpesa ? S.segBtnActiveSpesa : null),
-                        }}
+                        style={{ ...S.segBtn, ...(isSpesa ? S.segBtnSpesa : null) }}
                     >
                         <span aria-hidden="true">−</span> Spesa
                     </button>
@@ -55,17 +49,14 @@ export default function TransazioneForm({ categorie, catLoading, iniziale, onSub
                         role="radio"
                         aria-checked={!isSpesa}
                         onClick={() => setTipo('entrata')}
-                        style={{
-                            ...S.segBtn,
-                            ...(!isSpesa ? S.segBtnActiveEntrata : null),
-                        }}
+                        style={{ ...S.segBtn, ...(!isSpesa ? S.segBtnEntrata : null) }}
                     >
                         <span aria-hidden="true">+</span> Entrata
                     </button>
                 </div>
             </div>
 
-            <div style={S.row} className="grid-row">
+            <div style={S.row} className="grid-row-2">
                 <label style={S.field}>
                     <span style={S.lbl}>Data</span>
                     <input
@@ -95,11 +86,7 @@ export default function TransazioneForm({ categorie, catLoading, iniziale, onSub
 
             <label style={S.field}>
                 <span style={S.lbl}>Categoria</span>
-                <select
-                    value={categoriaId}
-                    onChange={e => setCategoriaId(e.target.value)}
-                    style={S.input}
-                >
+                <select value={categoriaId} onChange={e => setCategoriaId(e.target.value)} style={S.input}>
                     <option value="">— nessuna —</option>
                     {catLoading
                         ? <option>Caricamento…</option>
@@ -124,21 +111,11 @@ export default function TransazioneForm({ categorie, catLoading, iniziale, onSub
             {error && <div role="alert" style={S.error}>{error}</div>}
 
             <div style={S.actions}>
-                <button
-                    type="button"
-                    onClick={onCancel}
-                    style={S.btnGhost}
-                    className="ix-btn-ghost"
-                >
+                <button type="button" onClick={onCancel} style={S.btnGhost} className="ix-btn-ghost">
                     Annulla
                 </button>
-                <button
-                    type="submit"
-                    disabled={saving}
-                    style={S.btnPrimary}
-                    className="ix-btn-primary"
-                >
-                    {saving ? 'Salvataggio…' : (iniziale ? '💾 Salva modifiche' : '+ Aggiungi')}
+                <button type="submit" disabled={saving} style={S.btnPrimary} className="ix-btn-primary">
+                    {saving ? 'Salvataggio…' : (iniziale ? '💾 Salva' : '+ Aggiungi')}
                 </button>
             </div>
         </form>
@@ -149,12 +126,12 @@ const S = {
     form: { display: 'flex', flexDirection: 'column', gap: 14 },
     row: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 },
     field: { display: 'flex', flexDirection: 'column', gap: 6 },
-    lbl: { color: 'var(--text-muted)', fontSize: 12 },
+    lbl: { color: 'var(--text-muted)', fontSize: 12, fontWeight: 600 },
     input: {
         padding: '12px 14px',
-        background: 'var(--bg)',
-        border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-sm)',
+        background: 'var(--bg-2)',
+        border: '1px solid transparent',
+        borderRadius: 'var(--radius-md)',
         color: 'var(--text)',
         fontSize: 14,
         outline: 'none',
@@ -166,10 +143,9 @@ const S = {
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
         gap: 4,
-        background: 'var(--bg)',
+        background: 'var(--bg-2)',
         padding: 4,
         borderRadius: 'var(--radius-md)',
-        border: '1px solid var(--border)',
     },
     segBtn: {
         padding: '10px 12px',
@@ -185,13 +161,15 @@ const S = {
         gap: 6,
         transition: 'background-color var(--t-fast), color var(--t-fast)',
     },
-    segBtnActiveSpesa: {
-        background: 'rgba(255,107,107,.15)',
-        color: 'var(--danger)',
+    segBtnSpesa: {
+        background: 'var(--surface)',
+        color: 'var(--accent)',
+        boxShadow: 'var(--shadow-sm)',
     },
-    segBtnActiveEntrata: {
-        background: 'rgba(0,212,170,.15)',
+    segBtnEntrata: {
+        background: 'var(--surface)',
         color: 'var(--success)',
+        boxShadow: 'var(--shadow-sm)',
     },
     error: {
         padding: '10px 12px',
@@ -204,19 +182,21 @@ const S = {
     actions: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 },
     btnGhost: {
         padding: '10px 18px',
-        background: 'transparent',
-        border: '1px solid var(--border-strong)',
+        background: 'var(--surface)',
+        border: '1px solid var(--line-2)',
         borderRadius: 'var(--radius-md)',
         color: 'var(--text)',
         fontSize: 14,
+        fontWeight: 600,
     },
     btnPrimary: {
         padding: '10px 18px',
-        background: 'var(--grad-accent)',
+        background: 'var(--grad-hero)',
         border: 'none',
         borderRadius: 'var(--radius-md)',
         color: 'white',
-        fontWeight: 600,
+        fontWeight: 700,
         fontSize: 14,
+        boxShadow: 'var(--shadow-coral)',
     },
 }

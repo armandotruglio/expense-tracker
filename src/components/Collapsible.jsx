@@ -11,7 +11,6 @@ export default function Collapsible({ title, badge, defaultOpen = false, childre
                 style={S.head}
                 aria-expanded={open}
                 aria-controls={contentId}
-                className="ix-btn-ghost"
             >
                 <span style={{ ...S.arrow, transform: open ? 'rotate(90deg)' : 'rotate(0deg)' }} aria-hidden="true">▸</span>
                 <span style={S.title}>{title}</span>
@@ -32,9 +31,10 @@ const S = {
     wrap: {
         background: 'var(--surface)',
         borderRadius: 'var(--radius-lg)',
-        border: '1px solid var(--border-subtle)',
-        marginBottom: 16,
+        border: '1px solid var(--line)',
+        marginBottom: 20,
         overflow: 'hidden',
+        boxShadow: 'var(--shadow-sm)',
     },
     head: {
         width: '100%',
@@ -45,8 +45,8 @@ const S = {
         background: 'transparent',
         border: 'none',
         color: 'var(--text)',
-        fontSize: 16,
-        fontWeight: 600,
+        fontSize: 15,
+        fontWeight: 700,
         textAlign: 'left',
     },
     arrow: {
@@ -63,7 +63,7 @@ const S = {
         borderRadius: 'var(--radius-pill)',
         padding: '2px 10px',
         fontSize: 12,
-        fontWeight: 600,
+        fontWeight: 700,
     },
-    body: { padding: '0 20px 20px', animation: 'slideDown 0.2s ease' },
+    body: { padding: '4px 20px 20px', animation: 'slideDown 0.2s ease' },
 }
