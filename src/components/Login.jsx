@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
 export default function Login() {
     const { signIn, signUp } = useAuth()
 
-    const [mode, setMode] = useState('login') // 'login' | 'signup'
+    const [mode, setMode] = useState('login')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
@@ -31,31 +31,18 @@ export default function Login() {
                 const { data: codiceValido, error: rpcError } = await supabase
                     .rpc('verifica_codice_invito', { codice_input: invite.trim() })
 
-                if (rpcError) {
-                    setError('Errore nella verifica del codice. Riprova.')
-                    setLoading(false)
-                    return
-                }
-                if (!codiceValido) {
-                    setError('Codice invito non valido o già utilizzato')
-                    setLoading(false)
-                    return
-                }
+                if (rpcError) { setError('Errore nella verifica del codice. Riprova.'); setLoading(false); return }
+                if (!codiceValido) { setError('Codice invito non valido o già utilizzato'); setLoading(false); return }
 
                 const { error } = await signUp(email, password)
-                if (error) {
-                    setError(error.message)
-                } else {
-                    setInfo('✅ Registrazione avviata! Controlla la tua email e clicca sul link di conferma per attivare l\'account.')
-                }
+                if (error) setError(error.message)
+                else setInfo('✅ Registrazione avviata! Controlla la tua email e clicca sul link di conferma per attivare l\'account.')
             } else {
                 const { error } = await signIn(email, password)
                 if (error) {
                     if (error.message.toLowerCase().includes('not confirmed')) {
                         setError('Email non ancora confermata. Controlla la tua casella di posta.')
-                    } else {
-                        setError(error.message)
-                    }
+                    } else setError(error.message)
                 }
             }
         } catch (err) {
@@ -70,9 +57,12 @@ export default function Login() {
     return (
         <div style={S.wrap}>
             <form onSubmit={handleSubmit} style={S.card} noValidate>
-                <h1 style={S.title}>💰 Expense Tracker</h1>
-                <p style={S.subtitle}>
-                    {isSignup ? 'Crea il tuo account' : 'Accedi al tuo account'}
+                <div style={S.brandRow}>
+                    <span style={S.brandMark}>€</span>
+                    <h1 style={S.brand}>Spese</h1>
+                </div>
+                <p style={S.ciao}>
+                    {isSignup ? 'Crea il tuo account' : 'Ciao! Bentornato 👋'}
                 </p>
 
                 <div style={S.toggle} role="tablist" aria-label="Modalità autenticazione">
@@ -133,9 +123,7 @@ export default function Login() {
                         {showPassword ? '🙈' : '👁️'}
                     </button>
                 </div>
-                {isSignup && (
-                    <p style={S.hint} id="pwd-hint">Minimo 6 caratteri</p>
-                )}
+                {isSignup && <p style={S.hint} id="pwd-hint">Minimo 6 caratteri</p>}
 
                 {isSignup && (
                     <>
@@ -164,18 +152,12 @@ export default function Login() {
                     style={S.btn}
                     className="ix-btn-primary"
                 >
-                    {loading
-                        ? (isSignup ? 'Registrazione…' : 'Accesso…')
-                        : (isSignup ? 'Registrati' : 'Accedi')}
+                    {loading ? (isSignup ? 'Registrazione…' : 'Accesso…') : (isSignup ? 'Crea account' : 'Accedi')}
                 </button>
 
                 <p style={S.footer}>
                     {isSignup ? 'Hai già un account? ' : 'Non hai un account? '}
-                    <button
-                        type="button"
-                        onClick={() => switchMode(isSignup ? 'login' : 'signup')}
-                        style={S.link}
-                    >
+                    <button type="button" onClick={() => switchMode(isSignup ? 'login' : 'signup')} style={S.link}>
                         {isSignup ? 'Accedi' : 'Registrati'}
                     </button>
                 </p>
@@ -192,7 +174,7 @@ const S = {
         padding: '1rem',
         paddingTop: 'calc(1rem + var(--safe-top))',
         paddingBottom: 'calc(1rem + var(--safe-bottom))',
-        background: 'radial-gradient(circle at 30% 50%, rgba(233,69,96,.15), transparent 50%), radial-gradient(circle at 70% 80%, rgba(0,212,170,.1), transparent 50%), var(--bg)',
+        background: 'var(--grad-bg)',
     },
     card: {
         background: 'var(--surface)',
@@ -200,14 +182,36 @@ const S = {
         borderRadius: 'var(--radius-xl)',
         width: 'min(420px, 100%)',
         boxShadow: 'var(--shadow-lg)',
-        border: '1px solid var(--border)',
+        border: '1px solid var(--line)',
     },
-    title: { color: 'var(--text)', margin: 0, fontSize: 24 },
-    subtitle: { color: 'var(--text-muted)', marginTop: 4, marginBottom: 20, fontSize: 14 },
+    brandRow: { display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 4 },
+    brandMark: {
+        fontFamily: 'var(--font-serif)',
+        fontSize: 36,
+        fontWeight: 500,
+        color: 'var(--accent)',
+        lineHeight: 1,
+    },
+    brand: {
+        fontFamily: 'var(--font-serif)',
+        fontSize: 28,
+        fontWeight: 500,
+        letterSpacing: '-0.02em',
+        margin: 0,
+        color: 'var(--text)',
+    },
+    ciao: {
+        fontFamily: 'var(--font-hand)',
+        color: 'var(--lavender)',
+        fontSize: 22,
+        marginTop: 0,
+        marginBottom: 24,
+        fontWeight: 600,
+    },
     toggle: {
         display: 'flex',
         gap: 4,
-        background: 'var(--bg)',
+        background: 'var(--bg-2)',
         padding: 4,
         borderRadius: 'var(--radius-md)',
         marginBottom: 20,
@@ -220,20 +224,21 @@ const S = {
         borderRadius: 'var(--radius-sm)',
         color: 'var(--text-muted)',
         fontSize: 13,
-        fontWeight: 500,
+        fontWeight: 600,
         transition: 'background-color var(--t-fast), color var(--t-fast)',
     },
     toggleActive: {
-        background: 'var(--accent-soft)',
+        background: 'var(--surface)',
         color: 'var(--accent)',
+        boxShadow: 'var(--shadow-sm)',
     },
-    label: { color: 'var(--text-muted)', fontSize: 12, marginTop: 12, display: 'block' },
+    label: { color: 'var(--text-muted)', fontSize: 12, marginTop: 14, display: 'block', fontWeight: 600 },
     input: {
         width: '100%',
         padding: '12px 14px',
         marginTop: 6,
-        background: 'var(--bg)',
-        border: '1px solid var(--border)',
+        background: 'var(--bg-2)',
+        border: '1px solid transparent',
         borderRadius: 'var(--radius-md)',
         color: 'var(--text)',
         fontSize: 14,
@@ -259,13 +264,14 @@ const S = {
     btn: {
         width: '100%',
         marginTop: 24,
-        padding: '12px',
-        background: 'var(--grad-accent)',
+        padding: '14px',
+        background: 'var(--grad-hero)',
         border: 'none',
         borderRadius: 'var(--radius-md)',
         color: 'white',
-        fontWeight: 600,
+        fontWeight: 700,
         fontSize: 15,
+        boxShadow: 'var(--shadow-coral)',
     },
     error: {
         marginTop: 16,
@@ -292,6 +298,7 @@ const S = {
         border: 'none',
         color: 'var(--accent)',
         fontSize: 13,
+        fontWeight: 700,
         textDecoration: 'underline',
         padding: 0,
     },

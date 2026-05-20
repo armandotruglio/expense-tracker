@@ -1,32 +1,27 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { useCategorie } from '../hooks/useCategorie'
 import { formatEUR } from '../utils/format'
 import Modal from './Modal'
 import ConfirmDialog from './ConfirmDialog'
 
 const EMOJI_SUGGERITE = ['🏠', '🛒', '🚗', '💡', '🎭', '🍕', '💊', '👕', '💻', '📦', '📌', '💵', '🌱', '🎬', '✈️', '🎁', '🐕', '📚', '💼', '⛽']
-const COLORI_SUGGERITI = ['#ffb319', '#00d4aa', '#3b82f6', '#facc15', '#ec4899', '#e94560', '#a855f7', '#06b6d4', '#8b5cf6', '#94a3b8', '#10b981', '#f43f5e', '#84cc16', '#f97316']
-
-const EMPTY_FORM = { nome: '', icona: '📦', colore: '#94a3b8', budget_mensile: '' }
+const COLORI_SUGGERITI = ['#ff7a85', '#a78bfa', '#34c89b', '#ffb319', '#3b82f6', '#facc15', '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#94a3b8', '#8b5cf6']
+const EMPTY_FORM = { nome: '', icona: '📦', colore: '#a78bfa', budget_mensile: '' }
 
 export default function Categorie() {
     const { categorie, loading, aggiungi, modifica, elimina } = useCategorie()
-    const [modal, setModal] = useState(null) // null | { id?: number } (null = chiuso, {} = nuova, {id} = modifica)
+    const [modal, setModal] = useState(null)
     const [toDelete, setToDelete] = useState(null)
     const [deleteError, setDeleteError] = useState(null)
 
-    function apriNuova() {
-        setModal({ form: EMPTY_FORM })
-    }
-
+    function apriNuova() { setModal({ form: EMPTY_FORM }) }
     function apriModifica(c) {
         setModal({
             id: c.id,
             form: {
                 nome: c.nome,
                 icona: c.icona ?? '📦',
-                colore: c.colore ?? '#94a3b8',
+                colore: c.colore ?? '#a78bfa',
                 budget_mensile: String(c.budget_mensile ?? 0),
             },
         })
@@ -49,36 +44,21 @@ export default function Categorie() {
     }
 
     return (
-        <div style={S.app}>
-            <header style={S.header}>
+        <div>
+            <div style={S.header}>
                 <div style={{ minWidth: 0 }}>
+                    <div style={S.eyebrow}>Configurazione</div>
                     <h1 style={S.title}>🏷️ Categorie</h1>
                     <p style={S.subtitle}>
                         {categorie.length} {categorie.length === 1 ? 'categoria' : 'categorie'} · personalizza budget e aspetto
                     </p>
                 </div>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-                    <Link
-                        to="/"
-                        style={S.btnGhost}
-                        className="ix-btn-ghost"
-                        aria-label="Torna alla home"
-                    >
-                        <span aria-hidden="true">←</span>
-                        <span className="hide-mobile">Home</span>
-                    </Link>
-                    <button
-                        onClick={apriNuova}
-                        style={S.btnPrimary}
-                        className="ix-btn-primary"
-                    >
-                        + Nuova<span className="hide-mobile"> categoria</span>
-                    </button>
-                </div>
-            </header>
+                <button onClick={apriNuova} style={S.btnPrimary} className="ix-btn-primary">
+                    + Nuova categoria
+                </button>
+            </div>
 
-            <section style={S.section}>
-                <h2 style={S.h2}>Categorie esistenti</h2>
+            <div style={S.section}>
                 {loading ? (
                     <p style={S.muted}>Caricamento…</p>
                 ) : categorie.length === 0 ? (
@@ -86,18 +66,14 @@ export default function Categorie() {
                         <div style={S.emptyIcon} aria-hidden="true">📭</div>
                         <div style={S.emptyTitle}>Nessuna categoria</div>
                         <div style={S.emptyMsg}>Crea la prima categoria per organizzare le tue transazioni.</div>
-                        <button onClick={apriNuova} style={S.emptyBtn} className="ix-btn-primary">
+                        <button onClick={apriNuova} style={S.btnPrimary} className="ix-btn-primary">
                             + Crea categoria
                         </button>
                     </div>
                 ) : (
                     <ul style={S.list}>
                         {categorie.map(c => (
-                            <li
-                                key={c.id}
-                                style={S.item}
-                                className="ix-item"
-                            >
+                            <li key={c.id} style={S.item} className="ix-item">
                                 <div style={S.itemLeft}>
                                     <div style={{ ...S.itemIcon, background: `${c.colore}22` }}>
                                         <span aria-hidden="true">{c.icona}</span>
@@ -118,7 +94,7 @@ export default function Categorie() {
                                         className="ix-btn-icon"
                                         aria-label={`Modifica categoria ${c.nome}`}
                                     >
-                                        <span aria-hidden="true">✏️</span>
+                                        ✏️
                                     </button>
                                     <button
                                         onClick={() => { setDeleteError(null); setToDelete(c) }}
@@ -126,14 +102,14 @@ export default function Categorie() {
                                         className="ix-btn-icon"
                                         aria-label={`Elimina categoria ${c.nome}`}
                                     >
-                                        <span aria-hidden="true">🗑️</span>
+                                        🗑️
                                     </button>
                                 </div>
                             </li>
                         ))}
                     </ul>
                 )}
-            </section>
+            </div>
 
             <Modal
                 open={modal !== null}
@@ -162,9 +138,7 @@ export default function Categorie() {
             />
 
             {deleteError && (
-                <div style={S.toast} role="alert">
-                    Errore: {deleteError}
-                </div>
+                <div style={S.toast} role="alert">Errore: {deleteError}</div>
             )}
         </div>
     )
@@ -194,7 +168,7 @@ function CategoriaForm({ iniziale, onSubmit, onCancel }) {
 
     return (
         <form onSubmit={handleSubmit} style={F.form}>
-            <div style={F.row} className="grid-row">
+            <div style={F.row} className="grid-row-2">
                 <label style={F.field}>
                     <span style={F.lbl}>Nome</span>
                     <input
@@ -285,7 +259,6 @@ function CategoriaForm({ iniziale, onSubmit, onCancel }) {
                 </div>
             </div>
 
-            {/* Anteprima */}
             <div style={F.preview}>
                 <span style={F.previewLabel}>Anteprima</span>
                 <div style={{ ...F.chip, borderColor: form.colore }}>
@@ -300,20 +273,10 @@ function CategoriaForm({ iniziale, onSubmit, onCancel }) {
             {error && <div role="alert" style={F.error}>{error}</div>}
 
             <div style={F.actions}>
-                <button
-                    type="button"
-                    onClick={onCancel}
-                    style={F.btnGhost}
-                    className="ix-btn-ghost"
-                >
+                <button type="button" onClick={onCancel} style={F.btnGhost} className="ix-btn-ghost">
                     Annulla
                 </button>
-                <button
-                    type="submit"
-                    disabled={saving || !form.nome.trim()}
-                    style={F.btnPrimary}
-                    className="ix-btn-primary"
-                >
+                <button type="submit" disabled={saving || !form.nome.trim()} style={F.btnPrimary} className="ix-btn-primary">
                     {saving ? 'Salvataggio…' : '💾 Salva'}
                 </button>
             </div>
@@ -322,107 +285,87 @@ function CategoriaForm({ iniziale, onSubmit, onCancel }) {
 }
 
 const S = {
-    app: {
-        minHeight: '100vh',
-        background: 'var(--grad-bg)',
-        color: 'var(--text)',
-        padding: 'clamp(1rem, 4vw, 2rem)',
-        paddingTop: 'calc(clamp(1rem, 4vw, 2rem) + var(--safe-top))',
-        paddingBottom: 'calc(2rem + var(--safe-bottom))',
-        maxWidth: 1100,
-        margin: '0 auto',
-    },
     header: {
         display: 'flex',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 24,
-        gap: 12,
+        alignItems: 'flex-end',
+        marginBottom: 28,
+        padding: '0 18px',
+        gap: 16,
+        flexWrap: 'wrap',
     },
-    title: { margin: 0, fontSize: 'clamp(20px, 4vw, 28px)', fontWeight: 700 },
+    eyebrow: {
+        fontFamily: 'var(--font-hand)',
+        fontSize: 18,
+        color: 'var(--lavender)',
+        fontWeight: 600,
+        lineHeight: 1,
+    },
+    title: {
+        margin: '4px 0 0',
+        fontFamily: 'var(--font-serif)',
+        fontSize: 'clamp(26px, 4vw, 32px)',
+        fontWeight: 500,
+        letterSpacing: '-0.02em',
+    },
     subtitle: { margin: '4px 0 0', color: 'var(--text-muted)', fontSize: 13 },
     section: {
         background: 'var(--surface)',
-        padding: 24,
+        padding: 0,
         borderRadius: 'var(--radius-lg)',
-        border: '1px solid var(--border-subtle)',
+        border: '1px solid var(--line)',
+        margin: '0 18px',
+        boxShadow: 'var(--shadow-sm)',
+        overflow: 'hidden',
     },
-    h2: { margin: '0 0 16px 0', fontSize: 18 },
     btnPrimary: {
-        padding: '10px 16px',
-        background: 'var(--grad-accent)',
+        padding: '10px 18px',
+        background: 'var(--grad-hero)',
         border: 'none',
-        borderRadius: 'var(--radius-sm)',
+        borderRadius: 'var(--radius-md)',
         color: 'white',
         fontSize: 13,
-        fontWeight: 600,
-        display: 'inline-flex',
-        alignItems: 'center',
-    },
-    btnGhost: {
-        padding: '10px 14px',
-        background: 'transparent',
-        border: '1px solid var(--border-strong)',
-        borderRadius: 'var(--radius-sm)',
-        color: 'var(--text)',
-        fontSize: 13,
-        textDecoration: 'none',
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 6,
-        minHeight: 38,
+        fontWeight: 700,
+        boxShadow: 'var(--shadow-coral)',
     },
     btnIcon: {
         background: 'transparent',
         border: 'none',
         fontSize: 18,
-        padding: 8,
-        opacity: .7,
+        width: 36, height: 36,
+        opacity: 0.7,
         borderRadius: 'var(--radius-sm)',
-        minWidth: 36,
-        minHeight: 36,
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
     },
-    list: { listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 },
+    list: { listStyle: 'none', padding: 0, margin: 0 },
     item: {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '12px 14px',
-        background: 'var(--bg)',
-        borderRadius: 'var(--radius-md)',
-        border: '1px solid var(--border-subtle)',
+        padding: '14px 18px',
+        borderBottom: '1px solid var(--line)',
         gap: 12,
+        background: 'var(--surface)',
     },
     itemLeft: { display: 'flex', alignItems: 'center', gap: 12, minWidth: 0, flex: 1 },
     itemIcon: {
-        fontSize: 22,
-        width: 40,
-        height: 40,
+        fontSize: 20,
+        width: 42, height: 42,
         display: 'grid',
         placeItems: 'center',
-        borderRadius: 'var(--radius-md)',
+        borderRadius: 14,
         flexShrink: 0,
     },
-    itemTitle: { fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+    itemTitle: { fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
     itemSub: { fontSize: 12, color: 'var(--text-muted)', marginTop: 2 },
     itemRight: { display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 },
     muted: { color: 'var(--text-muted)', fontSize: 14, textAlign: 'center', padding: 20 },
-    empty: { textAlign: 'center', padding: '32px 20px' },
+    empty: { textAlign: 'center', padding: '40px 20px' },
     emptyIcon: { fontSize: 48, marginBottom: 12, opacity: 0.6 },
-    emptyTitle: { fontSize: 16, fontWeight: 600, marginBottom: 6 },
+    emptyTitle: { fontSize: 16, fontWeight: 700, marginBottom: 6 },
     emptyMsg: { color: 'var(--text-muted)', fontSize: 14, marginBottom: 16 },
-    emptyBtn: {
-        padding: '10px 18px',
-        background: 'var(--grad-accent)',
-        border: 'none',
-        borderRadius: 'var(--radius-md)',
-        color: 'white',
-        fontWeight: 600,
-        fontSize: 13,
-    },
     toast: {
         position: 'fixed',
         bottom: 'calc(16px + var(--safe-bottom))',
@@ -443,12 +386,12 @@ const F = {
     form: { display: 'flex', flexDirection: 'column', gap: 14 },
     row: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 },
     field: { display: 'flex', flexDirection: 'column', gap: 6 },
-    lbl: { color: 'var(--text-muted)', fontSize: 12 },
+    lbl: { color: 'var(--text-muted)', fontSize: 12, fontWeight: 600 },
     input: {
-        padding: '10px 12px',
-        background: 'var(--bg)',
-        border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-sm)',
+        padding: '12px 14px',
+        background: 'var(--bg-2)',
+        border: '1px solid transparent',
+        borderRadius: 'var(--radius-md)',
         color: 'var(--text)',
         fontSize: 14,
         outline: 'none',
@@ -458,43 +401,40 @@ const F = {
     pickerRow: { display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' },
     emojiList: { display: 'flex', flexWrap: 'wrap', gap: 6 },
     emojiBtn: {
-        width: 38,
-        height: 38,
-        border: '1px solid var(--border)',
-        background: 'var(--bg)',
+        width: 38, height: 38,
+        border: '1px solid var(--line)',
+        background: 'var(--bg-2)',
         borderRadius: 'var(--radius-sm)',
         fontSize: 18,
         transition: 'background-color var(--t-fast), border-color var(--t-fast)',
     },
     emojiBtnActive: { borderColor: 'var(--accent)', background: 'var(--accent-soft)' },
     colorInput: {
-        width: 50,
-        height: 38,
-        border: '1px solid var(--border)',
+        width: 50, height: 38,
+        border: '1px solid var(--line)',
         borderRadius: 'var(--radius-sm)',
         background: 'transparent',
         padding: 2,
     },
     colorList: { display: 'flex', flexWrap: 'wrap', gap: 6 },
     colorBtn: {
-        width: 30,
-        height: 30,
+        width: 30, height: 30,
         border: '2px solid transparent',
         borderRadius: '50%',
         transition: 'transform var(--t-fast), border-color var(--t-fast)',
     },
-    colorBtnActive: { borderColor: '#fff', transform: 'scale(1.1)' },
+    colorBtnActive: { borderColor: 'var(--text)', transform: 'scale(1.1)' },
     preview: {
         display: 'flex',
         alignItems: 'center',
         gap: 12,
-        padding: 12,
-        background: 'var(--bg)',
+        padding: 14,
+        background: 'var(--bg-2)',
         borderRadius: 'var(--radius-sm)',
-        border: '1px dashed var(--border)',
+        border: '1px dashed var(--line-2)',
         flexWrap: 'wrap',
     },
-    previewLabel: { color: 'var(--text-muted)', fontSize: 12 },
+    previewLabel: { color: 'var(--text-muted)', fontSize: 12, fontWeight: 600 },
     chip: {
         display: 'inline-flex',
         alignItems: 'center',
@@ -502,11 +442,12 @@ const F = {
         padding: '6px 12px',
         borderRadius: 'var(--radius-pill)',
         border: '2px solid',
-        background: 'rgba(255,255,255,.03)',
+        background: 'var(--surface)',
         fontSize: 14,
+        fontWeight: 600,
     },
     chipIcon: { fontSize: 18 },
-    chipBudget: { color: 'var(--text-muted)', fontSize: 13 },
+    chipBudget: { color: 'var(--text-muted)', fontSize: 13, fontWeight: 500 },
     error: {
         padding: '10px 12px',
         background: 'var(--danger-soft)',
@@ -518,19 +459,21 @@ const F = {
     actions: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 },
     btnGhost: {
         padding: '10px 18px',
-        background: 'transparent',
-        border: '1px solid var(--border-strong)',
+        background: 'var(--surface)',
+        border: '1px solid var(--line-2)',
         borderRadius: 'var(--radius-md)',
         color: 'var(--text)',
         fontSize: 14,
+        fontWeight: 600,
     },
     btnPrimary: {
         padding: '10px 18px',
-        background: 'var(--grad-accent)',
+        background: 'var(--grad-hero)',
         border: 'none',
         borderRadius: 'var(--radius-md)',
         color: 'white',
-        fontWeight: 600,
+        fontWeight: 700,
         fontSize: 14,
+        boxShadow: 'var(--shadow-coral)',
     },
 }

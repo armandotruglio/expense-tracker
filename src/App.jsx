@@ -1,8 +1,11 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useCallback, useState } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import Login from './components/Login'
 import Home from './components/Home'
 import Categorie from './components/Categorie'
+import Ricorrenti from './components/Ricorrenti'
+import Layout from './components/Layout'
 
 export default function App() {
   const { session, loading } = useAuth()
@@ -14,7 +17,6 @@ export default function App() {
           <div style={spinnerStyles} aria-hidden="true" />
           <span>Caricamento…</span>
         </div>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     )
   }
@@ -26,13 +28,31 @@ export default function App() {
           <Route path="*" element={<Login />} />
         </Routes>
       ) : (
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/categorie" element={<Categorie />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <AppShell />
       )}
     </BrowserRouter>
+  )
+}
+
+function AppShell() {
+  const [createTrigger, setCreateTrigger] = useState(0)
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  const handleAddClick = useCallback(() => {
+    if (location.pathname !== '/') navigate('/')
+    setCreateTrigger(t => t + 1)
+  }, [navigate, location.pathname])
+
+  return (
+    <Layout onAddClick={handleAddClick}>
+      <Routes>
+        <Route path="/" element={<Home openCreateTrigger={createTrigger} />} />
+        <Route path="/categorie" element={<Categorie />} />
+        <Route path="/ricorrenti" element={<Ricorrenti />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Layout>
   )
 }
 
@@ -48,7 +68,7 @@ const loadingStyles = {
 const spinnerStyles = {
   width: 18,
   height: 18,
-  border: '2px solid rgba(255,255,255,0.15)',
+  border: '2px solid var(--line-2)',
   borderTopColor: 'var(--accent)',
   borderRadius: '50%',
   animation: 'spin 0.8s linear infinite',
