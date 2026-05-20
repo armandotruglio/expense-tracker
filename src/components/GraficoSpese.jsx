@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import { formatEUR } from '../utils/format'
 
 export default function GraficoSpese({ transazioni }) {
@@ -42,6 +42,7 @@ export default function GraficoSpese({ transazioni }) {
     }
 
     const active = activeId != null ? dati.find(d => d.id === activeId) : null
+    const togglePin = (id) => setActiveId(prev => prev === id ? null : id)
 
     return (
         <div style={S.card}>
@@ -50,7 +51,7 @@ export default function GraficoSpese({ transazioni }) {
                 <span style={S.totale} className="num">{formatEUR(totaleComplessivo)}</span>
             </div>
 
-            <div style={S.grid}>
+            <div style={S.grid} className="chart-grid">
                 <div style={S.chartWrap}>
                     <ResponsiveContainer width="100%" height={240}>
                         <PieChart>
@@ -59,12 +60,13 @@ export default function GraficoSpese({ transazioni }) {
                                 dataKey="totale"
                                 nameKey="nome"
                                 cx="50%" cy="50%"
-                                innerRadius={64}
-                                outerRadius={100}
+                                innerRadius={68}
+                                outerRadius={104}
                                 paddingAngle={2}
                                 stroke="none"
                                 onMouseEnter={(d) => setActiveId(d?.id)}
                                 onMouseLeave={() => setActiveId(null)}
+                                onClick={(d) => togglePin(d?.id)}
                             >
                                 {dati.map((d) => (
                                     <Cell
@@ -75,16 +77,25 @@ export default function GraficoSpese({ transazioni }) {
                                     />
                                 ))}
                             </Pie>
-                            <Tooltip content={<CustomTooltip totale={totaleComplessivo} />} />
                         </PieChart>
                     </ResponsiveContainer>
+
                     <div style={S.donutCenter}>
-                        <div style={S.donutLabel}>
-                            {active ? active.nome : 'Totale'}
-                        </div>
-                        <div style={S.donutValue} className="num">
-                            {formatEUR(active ? active.totale : totaleComplessivo)}
-                        </div>
+                        {active ? (
+                            <>
+                                <div style={S.donutEmoji} aria-hidden="true">{active.icona}</div>
+                                <div style={S.donutNome} title={active.nome}>{active.nome}</div>
+                                <div style={S.donutValue} className="num">{formatEUR(active.totale)}</div>
+                                <div style={S.donutSub} className="num">
+                                    {((active.totale / totaleComplessivo) * 100).toFixed(1)}% · {active.count} mov.
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div style={S.donutLabel}>Totale</div>
+                                <div style={S.donutValue} className="num">{formatEUR(totaleComplessivo)}</div>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -102,6 +113,7 @@ export default function GraficoSpese({ transazioni }) {
                                 }}
                                 onMouseEnter={() => setActiveId(d.id)}
                                 onMouseLeave={() => setActiveId(null)}
+                                onClick={() => togglePin(d.id)}
                             >
                                 <div style={S.legendLeft}>
                                     <span style={{ ...S.legendDot, background: d.colore }} aria-hidden="true" />
@@ -121,22 +133,6 @@ export default function GraficoSpese({ transazioni }) {
     )
 }
 
-function CustomTooltip({ active, payload, totale }) {
-    if (!active || !payload?.length) return null
-    const d = payload[0].payload
-    const pct = (d.totale / totale) * 100
-    return (
-        <div style={S.tooltip}>
-            <div style={S.tooltipHead}>
-                <span style={{ fontSize: 18 }}>{d.icona}</span>
-                <strong>{d.nome}</strong>
-            </div>
-            <div style={S.tooltipVal} className="num">{formatEUR(d.totale)} · {pct.toFixed(1)}%</div>
-            <div style={S.tooltipSub}>{d.count} {d.count === 1 ? 'movimento' : 'movimenti'}</div>
-        </div>
-    )
-}
-
 const S = {
     card: {
         background: 'var(--surface)',
@@ -144,6 +140,7 @@ const S = {
         borderRadius: 'var(--radius-lg)',
         border: '1px solid var(--line)',
         boxShadow: 'var(--shadow-sm)',
+        overflow: 'hidden',
     },
     head: { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 },
     h2: {
@@ -154,14 +151,24 @@ const S = {
         letterSpacing: '-0.01em',
     },
     totale: { fontSize: 14, color: 'var(--text-muted)', fontWeight: 600 },
-    grid: { display: 'grid', gridTemplateColumns: 'minmax(220px, 1fr) minmax(240px, 1.1fr)', gap: 18, alignItems: 'center' },
-    chartWrap: { position: 'relative', minWidth: 220 },
+    grid: {
+        display: 'grid',
+        gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.1fr)',
+        gap: 18,
+        alignItems: 'center',
+    },
+    chartWrap: { position: 'relative', minWidth: 0, width: '100%' },
     donutCenter: {
-        position: 'absolute', top: '50%', left: '50%',
+        position: 'absolute',
+        top: '50%', left: '50%',
         transform: 'translate(-50%, -50%)',
         textAlign: 'center',
         pointerEvents: 'none',
-        maxWidth: 120,
+        width: 124,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 2,
     },
     donutLabel: {
         color: 'var(--text-muted)',
@@ -169,19 +176,38 @@ const S = {
         textTransform: 'uppercase',
         letterSpacing: '0.12em',
         fontWeight: 700,
+    },
+    donutEmoji: { fontSize: 20, lineHeight: 1, marginBottom: 2 },
+    donutNome: {
+        fontSize: 11,
+        color: 'var(--text-muted)',
+        fontWeight: 600,
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
+        maxWidth: '100%',
     },
-    donutValue: { color: 'var(--text)', fontSize: 18, fontWeight: 800, marginTop: 4 },
+    donutValue: {
+        color: 'var(--text)',
+        fontSize: 17,
+        fontWeight: 800,
+        marginTop: 2,
+    },
+    donutSub: {
+        color: 'var(--text-muted)',
+        fontSize: 10.5,
+        fontWeight: 600,
+        marginTop: 2,
+    },
     legend: {
         listStyle: 'none',
         padding: 0, margin: 0,
         display: 'flex',
         flexDirection: 'column',
         gap: 6,
-        maxHeight: 240,
+        maxHeight: 260,
         overflowY: 'auto',
+        minWidth: 0,
     },
     legendItem: {
         display: 'flex',
@@ -191,10 +217,12 @@ const S = {
         borderRadius: 'var(--radius-sm)',
         border: '1px solid',
         transition: 'border-color 0.15s, background 0.15s',
+        cursor: 'pointer',
+        minWidth: 0,
     },
-    legendLeft: { display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 },
+    legendLeft: { display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 },
     legendDot: { width: 10, height: 10, borderRadius: '50%', flexShrink: 0 },
-    legendIcon: { fontSize: 14 },
+    legendIcon: { fontSize: 14, flexShrink: 0 },
     legendNome: {
         fontSize: 13,
         color: 'var(--text)',
@@ -202,6 +230,7 @@ const S = {
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
+        minWidth: 0,
     },
     legendRight: { textAlign: 'right', flexShrink: 0, marginLeft: 12 },
     legendVal: { fontSize: 13, fontWeight: 700, color: 'var(--text)' },
@@ -209,15 +238,4 @@ const S = {
     empty: { textAlign: 'center', padding: '20px 0' },
     emptyIcon: { fontSize: 36, opacity: 0.5, marginBottom: 8 },
     emptyMsg: { color: 'var(--text-muted)', fontSize: 14 },
-    tooltip: {
-        background: 'var(--surface)',
-        border: '1px solid var(--line)',
-        borderRadius: 'var(--radius-md)',
-        padding: '10px 12px',
-        minWidth: 180,
-        boxShadow: 'var(--shadow-md)',
-    },
-    tooltipHead: { display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text)', fontSize: 13 },
-    tooltipVal: { marginTop: 6, color: 'var(--text)', fontSize: 14, fontWeight: 700 },
-    tooltipSub: { marginTop: 2, color: 'var(--text-muted)', fontSize: 11 },
 }
