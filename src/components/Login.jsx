@@ -2,14 +2,13 @@ import { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 
-const INVITE_CODE = import.meta.env.VITE_INVITE_CODE
-
 export default function Login() {
     const { signIn, signUp } = useAuth()
 
     const [mode, setMode] = useState('login') // 'login' | 'signup'
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
     const [invite, setInvite] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
@@ -29,9 +28,8 @@ export default function Login() {
 
         try {
             if (mode === 'signup') {
-                // verifica codice invito lato server (consuma il codice se valido)
                 const { data: codiceValido, error: rpcError } = await supabase
-                    .rpc('verifica_codice_invito', { codice_input: invite })
+                    .rpc('verifica_codice_invito', { codice_input: invite.trim() })
 
                 if (rpcError) {
                     setError('Errore nella verifica del codice. Riprova.')
@@ -53,7 +51,6 @@ export default function Login() {
             } else {
                 const { error } = await signIn(email, password)
                 if (error) {
-                    // messaggio più chiaro se l'email non è confermata
                     if (error.message.toLowerCase().includes('not confirmed')) {
                         setError('Email non ancora confermata. Controlla la tua casella di posta.')
                     } else {
@@ -71,168 +68,231 @@ export default function Login() {
     const isSignup = mode === 'signup'
 
     return (
-        <div style={styles.wrap}>
-            <form onSubmit={handleSubmit} style={styles.card}>
-                <h1 style={styles.title}>💰 Expense Tracker</h1>
-                <p style={styles.subtitle}>
+        <div style={S.wrap}>
+            <form onSubmit={handleSubmit} style={S.card} noValidate>
+                <h1 style={S.title}>💰 Expense Tracker</h1>
+                <p style={S.subtitle}>
                     {isSignup ? 'Crea il tuo account' : 'Accedi al tuo account'}
                 </p>
 
-                {/* TOGGLE */}
-                <div style={styles.toggle}>
+                <div style={S.toggle} role="tablist" aria-label="Modalità autenticazione">
                     <button
                         type="button"
                         onClick={() => switchMode('login')}
-                        style={{ ...styles.toggleBtn, ...(!isSignup ? styles.toggleActive : null) }}
+                        role="tab"
+                        aria-selected={!isSignup}
+                        style={{ ...S.toggleBtn, ...(!isSignup ? S.toggleActive : null) }}
                     >
                         Accedi
                     </button>
                     <button
                         type="button"
                         onClick={() => switchMode('signup')}
-                        style={{ ...styles.toggleBtn, ...(isSignup ? styles.toggleActive : null) }}
+                        role="tab"
+                        aria-selected={isSignup}
+                        style={{ ...S.toggleBtn, ...(isSignup ? S.toggleActive : null) }}
                     >
                         Registrati
                     </button>
                 </div>
 
-                <label style={styles.label}>Email</label>
+                <label style={S.label} htmlFor="login-email">Email</label>
                 <input
+                    id="login-email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    style={styles.input}
+                    style={S.input}
                     autoComplete="email"
+                    inputMode="email"
+                    spellCheck="false"
                 />
 
-                <label style={styles.label}>Password</label>
-                <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={6}
-                    style={styles.input}
-                    autoComplete={isSignup ? 'new-password' : 'current-password'}
-                />
+                <label style={S.label} htmlFor="login-password">Password</label>
+                <div style={S.passwordWrap}>
+                    <input
+                        id="login-password"
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        minLength={6}
+                        style={{ ...S.input, paddingRight: 44 }}
+                        autoComplete={isSignup ? 'new-password' : 'current-password'}
+                        aria-describedby={isSignup ? 'pwd-hint' : undefined}
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(s => !s)}
+                        style={S.eyeBtn}
+                        aria-label={showPassword ? 'Nascondi password' : 'Mostra password'}
+                        aria-pressed={showPassword}
+                        className="ix-btn-icon"
+                    >
+                        {showPassword ? '🙈' : '👁️'}
+                    </button>
+                </div>
                 {isSignup && (
-                    <p style={styles.hint}>Minimo 6 caratteri</p>
+                    <p style={S.hint} id="pwd-hint">Minimo 6 caratteri</p>
                 )}
 
-                {/* CODICE INVITO solo in registrazione */}
                 {isSignup && (
                     <>
-                        <label style={styles.label}>Codice invito</label>
+                        <label style={S.label} htmlFor="login-invite">Codice invito</label>
                         <input
+                            id="login-invite"
                             type="text"
                             value={invite}
-                            onChange={(e) => setInvite(e.target.value)}
+                            onChange={(e) => setInvite(e.target.value.toUpperCase())}
                             required
                             placeholder="Inserisci il codice ricevuto"
-                            style={styles.input}
+                            style={{ ...S.input, letterSpacing: 1, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}
+                            autoCapitalize="characters"
+                            autoCorrect="off"
+                            spellCheck="false"
                         />
                     </>
                 )}
 
-                {error && <div style={styles.error}>{error}</div>}
-                {info && <div style={styles.info}>{info}</div>}
+                {error && <div role="alert" style={S.error}>{error}</div>}
+                {info && <div role="status" style={S.info}>{info}</div>}
 
-                <button type="submit" disabled={loading} style={styles.btn}>
+                <button
+                    type="submit"
+                    disabled={loading}
+                    style={S.btn}
+                    className="ix-btn-primary"
+                >
                     {loading
                         ? (isSignup ? 'Registrazione…' : 'Accesso…')
                         : (isSignup ? 'Registrati' : 'Accedi')}
                 </button>
 
-                {!isSignup && (
-                    <p style={styles.footer}>
-                        Non hai un account?{' '}
-                        <button type="button" onClick={() => switchMode('signup')} style={styles.link}>
-                            Registrati
-                        </button>
-                    </p>
-                )}
-                {isSignup && (
-                    <p style={styles.footer}>
-                        Hai già un account?{' '}
-                        <button type="button" onClick={() => switchMode('login')} style={styles.link}>
-                            Accedi
-                        </button>
-                    </p>
-                )}
+                <p style={S.footer}>
+                    {isSignup ? 'Hai già un account? ' : 'Non hai un account? '}
+                    <button
+                        type="button"
+                        onClick={() => switchMode(isSignup ? 'login' : 'signup')}
+                        style={S.link}
+                    >
+                        {isSignup ? 'Accedi' : 'Registrati'}
+                    </button>
+                </p>
             </form>
         </div>
     )
 }
 
-const styles = {
+const S = {
     wrap: {
         minHeight: '100vh',
         display: 'grid',
         placeItems: 'center',
         padding: '1rem',
-        background: 'radial-gradient(circle at 30% 50%, rgba(233,69,96,.15), transparent 50%), radial-gradient(circle at 70% 80%, rgba(0,212,170,.1), transparent 50%), #0f0f1e',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
+        paddingTop: 'calc(1rem + var(--safe-top))',
+        paddingBottom: 'calc(1rem + var(--safe-bottom))',
+        background: 'radial-gradient(circle at 30% 50%, rgba(233,69,96,.15), transparent 50%), radial-gradient(circle at 70% 80%, rgba(0,212,170,.1), transparent 50%), var(--bg)',
     },
     card: {
-        background: '#1e1e2f',
+        background: 'var(--surface)',
         padding: '2.5rem',
-        borderRadius: 16,
-        width: 'min(400px, 100%)',
-        boxShadow: '0 20px 60px rgba(0,0,0,.4)',
-        border: '1px solid rgba(255,255,255,.05)',
-        boxSizing: 'border-box',
+        borderRadius: 'var(--radius-xl)',
+        width: 'min(420px, 100%)',
+        boxShadow: 'var(--shadow-lg)',
+        border: '1px solid var(--border)',
     },
-    title: { color: '#e6e6e6', margin: 0, fontSize: 24 },
-    subtitle: { color: '#a0a0a0', marginTop: 4, marginBottom: 20, fontSize: 14 },
-    toggle: { display: 'flex', gap: 4, background: '#0f0f1e', padding: 4, borderRadius: 10, marginBottom: 20 },
-    toggleBtn: { flex: 1, padding: '8px', background: 'transparent', border: 'none', borderRadius: 8, color: '#a0a0a0', cursor: 'pointer', fontSize: 13, fontWeight: 500 },
-    toggleActive: { background: 'rgba(233,69,96,.15)', color: '#e94560' },
-    label: { color: '#a0a0a0', fontSize: 12, marginTop: 12, display: 'block' },
+    title: { color: 'var(--text)', margin: 0, fontSize: 24 },
+    subtitle: { color: 'var(--text-muted)', marginTop: 4, marginBottom: 20, fontSize: 14 },
+    toggle: {
+        display: 'flex',
+        gap: 4,
+        background: 'var(--bg)',
+        padding: 4,
+        borderRadius: 'var(--radius-md)',
+        marginBottom: 20,
+    },
+    toggleBtn: {
+        flex: 1,
+        padding: '10px',
+        background: 'transparent',
+        border: 'none',
+        borderRadius: 'var(--radius-sm)',
+        color: 'var(--text-muted)',
+        fontSize: 13,
+        fontWeight: 500,
+        transition: 'background-color var(--t-fast), color var(--t-fast)',
+    },
+    toggleActive: {
+        background: 'var(--accent-soft)',
+        color: 'var(--accent)',
+    },
+    label: { color: 'var(--text-muted)', fontSize: 12, marginTop: 12, display: 'block' },
     input: {
         width: '100%',
         padding: '12px 14px',
         marginTop: 6,
-        background: '#0f0f1e',
-        border: '1px solid rgba(255,255,255,.08)',
-        borderRadius: 10,
-        color: '#e6e6e6',
+        background: 'var(--bg)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-md)',
+        color: 'var(--text)',
         fontSize: 14,
         outline: 'none',
-        boxSizing: 'border-box',
+        transition: 'border-color var(--t-fast), box-shadow var(--t-fast)',
     },
-    hint: { color: '#6b7280', fontSize: 11, marginTop: 4, marginBottom: 0 },
+    passwordWrap: { position: 'relative' },
+    eyeBtn: {
+        position: 'absolute',
+        right: 6,
+        top: '50%',
+        transform: 'translateY(-50%)',
+        marginTop: 3,
+        background: 'transparent',
+        border: 'none',
+        fontSize: 18,
+        width: 36,
+        height: 36,
+        borderRadius: 'var(--radius-sm)',
+        opacity: 0.7,
+    },
+    hint: { color: 'var(--text-subtle)', fontSize: 11, marginTop: 4, marginBottom: 0 },
     btn: {
         width: '100%',
         marginTop: 24,
         padding: '12px',
-        background: 'linear-gradient(135deg, #e94560, #ff6b6b)',
+        background: 'var(--grad-accent)',
         border: 'none',
-        borderRadius: 10,
+        borderRadius: 'var(--radius-md)',
         color: 'white',
         fontWeight: 600,
         fontSize: 15,
-        cursor: 'pointer',
     },
     error: {
         marginTop: 16,
         padding: '10px 12px',
-        background: 'rgba(255,107,107,.1)',
-        border: '1px solid rgba(255,107,107,.3)',
-        borderRadius: 8,
-        color: '#ff6b6b',
+        background: 'var(--danger-soft)',
+        border: '1px solid var(--danger-ring)',
+        borderRadius: 'var(--radius-sm)',
+        color: 'var(--danger)',
         fontSize: 13,
     },
     info: {
         marginTop: 16,
         padding: '10px 12px',
-        background: 'rgba(0,212,170,.1)',
-        border: '1px solid rgba(0,212,170,.3)',
-        borderRadius: 8,
-        color: '#00d4aa',
+        background: 'var(--success-soft)',
+        border: '1px solid var(--success-ring)',
+        borderRadius: 'var(--radius-sm)',
+        color: 'var(--success)',
         fontSize: 13,
         lineHeight: 1.4,
     },
-    footer: { color: '#a0a0a0', fontSize: 13, textAlign: 'center', marginTop: 20, marginBottom: 0 },
-    link: { background: 'none', border: 'none', color: '#e94560', cursor: 'pointer', fontSize: 13, textDecoration: 'underline', padding: 0 },
+    footer: { color: 'var(--text-muted)', fontSize: 13, textAlign: 'center', marginTop: 20, marginBottom: 0 },
+    link: {
+        background: 'none',
+        border: 'none',
+        color: 'var(--accent)',
+        fontSize: 13,
+        textDecoration: 'underline',
+        padding: 0,
+    },
 }
