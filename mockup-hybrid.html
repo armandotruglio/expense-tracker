@@ -1,0 +1,1446 @@
+<!doctype html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Expense Tracker · Mockup ibrido</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <style>
+        :root {
+            /* PLAYFUL PALETTE (condivisa) */
+            --bg: #fef6f0;
+            --bg-2: #fbeee5;
+            --surface: #ffffff;
+            --surface-2: #fdf2ea;
+            --line: rgba(40, 20, 60, 0.07);
+            --line-2: rgba(40, 20, 60, 0.12);
+
+            --text: #2a1b3d;
+            --text-2: #4a3a5e;
+            --muted: #8a7da0;
+            --subtle: #b6a9c8;
+
+            --coral: #ff7a85;
+            --coral-2: #ff9a7e;
+            --peach: #ffc4a3;
+            --lavender: #a78bfa;
+            --lavender-2: #c4b5fd;
+            --mint: #34c89b;
+            --mint-soft: #d6f5ea;
+            --rose-soft: #ffe1e4;
+            --butter: #fff3c4;
+
+            --grad-hero: linear-gradient(135deg, #ff8a92 0%, #ffaa8a 50%, #ffc9a3 100%);
+            --grad-purple: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%);
+            --grad-mint: linear-gradient(135deg, #6ee7c0 0%, #34c89b 100%);
+
+            --r-sm: 12px;
+            --r-md: 18px;
+            --r-lg: 24px;
+            --r-xl: 32px;
+
+            --shadow-sm: 0 2px 8px rgba(40, 20, 60, 0.04);
+            --shadow-md: 0 8px 24px rgba(40, 20, 60, 0.08);
+            --shadow-coral: 0 12px 32px rgba(255, 122, 133, 0.30);
+
+            --font: 'Plus Jakarta Sans', system-ui, sans-serif;
+            --font-serif: 'Fraunces', Georgia, serif;
+            --font-hand: 'Caveat', cursive;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at 15% 0%, #ffe5d6 0%, transparent 50%),
+                radial-gradient(circle at 85% 30%, #e8dcff 0%, transparent 55%),
+                var(--bg);
+            background-attachment: fixed;
+        }
+
+        button {
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        /* =====================================================
+           MOBILE (default, < 960px)
+           ===================================================== */
+
+        .shell {
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 100vh;
+            padding-bottom: 90px;
+            position: relative;
+        }
+
+        /* sidebar nascosta su mobile */
+        .sidebar {
+            display: none;
+        }
+
+        /* topbar desktop nascosta su mobile */
+        .topbar {
+            display: none;
+        }
+
+        /* MOBILE header */
+        .m-header {
+            padding: 24px 22px 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .greet .ciao {
+            font-family: var(--font-hand);
+            font-size: 18px;
+            color: var(--lavender);
+            font-weight: 600;
+            display: block;
+            line-height: 1;
+        }
+
+        .greet .name {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .m-header .actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 14px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            display: grid;
+            place-items: center;
+            font-size: 16px;
+            position: relative;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .icon-btn .dot {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 8px;
+            height: 8px;
+            background: var(--coral);
+            border: 2px solid var(--surface);
+            border-radius: 50%;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--grad-purple);
+            display: grid;
+            place-items: center;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* HERO (mobile playful version) */
+        .hero {
+            margin: 16px 18px 24px;
+            background: var(--grad-hero);
+            border-radius: var(--r-xl);
+            padding: 28px 26px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-coral);
+        }
+
+        .hero::before,
+        .hero::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+        }
+
+        .hero::before {
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.18);
+            top: -60px;
+            right: -60px;
+        }
+
+        .hero::after {
+            width: 120px;
+            height: 120px;
+            background: rgba(167, 139, 250, 0.35);
+            bottom: -40px;
+            left: -30px;
+        }
+
+        .hero > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .hero-month {
+            font-size: 13px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 12px;
+            border-radius: 999px;
+        }
+
+        .hero-emoji {
+            font-size: 28px;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+        }
+
+        .hero-label {
+            font-size: 13px;
+            opacity: 0.85;
+            font-weight: 500;
+        }
+
+        .hero-amount {
+            font-size: 44px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin: 6px 0 4px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .hero-amount .cents {
+            font-size: 0.55em;
+            opacity: 0.85;
+            font-weight: 600;
+        }
+
+        .hero-sub {
+            font-size: 13px;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+
+        /* Quick actions */
+        .quick {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            padding: 0 18px;
+            margin-bottom: 28px;
+        }
+
+        .qa {
+            background: var(--surface);
+            border-radius: var(--r-md);
+            padding: 14px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow-sm);
+            transition: transform .15s;
+        }
+
+        .qa:hover {
+            transform: translateY(-2px);
+        }
+
+        .qa .ico {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            font-size: 17px;
+            color: white;
+            font-weight: 700;
+        }
+
+        .qa.spesa .ico {
+            background: var(--grad-hero);
+        }
+
+        .qa.entrata .ico {
+            background: var(--grad-mint);
+        }
+
+        .qa.trasf .ico {
+            background: var(--grad-purple);
+        }
+
+        .qa .lbl {
+            font-size: 11.5px;
+            font-weight: 600;
+        }
+
+        /* Sezioni */
+        .section {
+            padding: 0 18px;
+            margin-bottom: 26px;
+        }
+
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 12px;
+        }
+
+        .section-head h2 {
+            font-size: 17px;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.01em;
+        }
+
+        .section-head a {
+            font-size: 13px;
+            color: var(--coral);
+            font-weight: 600;
+        }
+
+        /* Week chart card */
+        .week-card {
+            background: var(--surface);
+            border-radius: var(--r-lg);
+            padding: 18px 18px 14px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--line);
+        }
+
+        .week-head {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .week-head .titolo {
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .week-head .totale {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .week-head .trend {
+            font-size: 12px;
+            color: var(--mint);
+            font-weight: 700;
+            background: var(--mint-soft);
+            padding: 3px 8px;
+            border-radius: 999px;
+            margin-left: 6px;
+        }
+
+        .bars {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            height: 100px;
+            gap: 6px;
+            padding-top: 8px;
+        }
+
+        .bar-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .bar-vis {
+            width: 100%;
+            background: var(--rose-soft);
+            border-radius: 8px;
+        }
+
+        .bar-col.today .bar-vis {
+            background: var(--grad-hero);
+        }
+
+        .bar-day {
+            font-size: 10px;
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .bar-col.today .bar-day {
+            color: var(--coral);
+        }
+
+        /* Insight */
+        .insight {
+            background: var(--grad-purple);
+            border-radius: var(--r-lg);
+            padding: 20px 22px;
+            color: white;
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            box-shadow: 0 8px 24px rgba(167, 139, 250, 0.35);
+        }
+
+        .insight .icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.22);
+            display: grid;
+            place-items: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .insight .body {
+            line-height: 1.35;
+            font-size: 13.5px;
+            font-weight: 500;
+        }
+
+        .insight .body b {
+            font-weight: 700;
+        }
+
+        /* Budget pills */
+        .budget-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .b-pill {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--r-md);
+            padding: 14px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .b-pill .top {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .b-pill .emoji {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: grid;
+            place-items: center;
+            font-size: 14px;
+        }
+
+        .b-pill.cibo .emoji {
+            background: var(--mint-soft);
+        }
+
+        .b-pill.ristorante .emoji {
+            background: var(--rose-soft);
+        }
+
+        .b-pill.trasporti .emoji {
+            background: #fde2c8;
+        }
+
+        .b-pill.tempo .emoji {
+            background: #e9deff;
+        }
+
+        .b-pill .nome {
+            font-size: 12.5px;
+            font-weight: 600;
+        }
+
+        .b-pill .val {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .b-pill .of {
+            color: var(--muted);
+            font-weight: 500;
+            font-size: 12px;
+        }
+
+        .b-pill .bar {
+            height: 5px;
+            background: var(--bg-2);
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .b-pill .bar > div {
+            height: 100%;
+            border-radius: 999px;
+        }
+
+        .fill-mint { background: var(--mint); }
+        .fill-coral { background: var(--coral); }
+        .fill-purple { background: var(--lavender); }
+
+        /* Tx list */
+        .day-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            font-weight: 700;
+            margin: 16px 0 8px;
+        }
+
+        .tx-list {
+            background: var(--surface);
+            border-radius: var(--r-lg);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--line);
+            overflow: hidden;
+        }
+
+        .tx {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--line);
+            transition: background .15s;
+        }
+
+        .tx:hover {
+            background: var(--bg-2);
+        }
+
+        .tx:last-child {
+            border-bottom: none;
+        }
+
+        .tx-emoji {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: grid;
+            place-items: center;
+            font-size: 19px;
+            flex-shrink: 0;
+        }
+
+        .tx-emoji.cibo { background: var(--mint-soft); }
+        .tx-emoji.ristorante { background: var(--rose-soft); }
+        .tx-emoji.trasporto { background: #fde2c8; }
+        .tx-emoji.lavoro { background: #e9deff; }
+        .tx-emoji.shopping { background: var(--butter); }
+
+        .tx-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .tx-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .tx-sub {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .tx-amt {
+            font-size: 14.5px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.01em;
+        }
+
+        .tx-amt.down { color: var(--coral); }
+        .tx-amt.up { color: var(--mint); }
+
+        /* Bottom tab bar */
+        .tabbar {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            background: var(--surface);
+            border-top: 1px solid var(--line);
+            padding: 10px 18px calc(10px + env(safe-area-inset-bottom));
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -10px 30px rgba(40, 20, 60, 0.05);
+            z-index: 100;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 6px 0;
+            color: var(--muted);
+            font-size: 10.5px;
+            font-weight: 600;
+        }
+
+        .tab .ic {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .tab.active { color: var(--coral); }
+
+        .fab {
+            width: 56px;
+            height: 56px;
+            border-radius: 22px;
+            background: var(--grad-hero);
+            display: grid;
+            place-items: center;
+            color: white;
+            font-size: 28px;
+            box-shadow: var(--shadow-coral);
+            margin-top: -28px;
+            flex-shrink: 0;
+            border: 4px solid var(--surface);
+        }
+
+        /* =====================================================
+           DESKTOP (>= 960px) — versione "editoriale warm"
+           ===================================================== */
+        @media (min-width: 960px) {
+
+            body {
+                display: grid;
+                grid-template-columns: 260px 1fr;
+            }
+
+            .m-header,
+            .tabbar { display: none; }
+
+            .shell {
+                max-width: 1240px;
+                padding: 32px 40px 60px;
+            }
+
+            /* SIDEBAR fissa */
+            .sidebar {
+                display: flex;
+                flex-direction: column;
+                gap: 32px;
+                position: sticky;
+                top: 0;
+                height: 100vh;
+                padding: 28px 22px;
+                border-right: 1px solid var(--line);
+                background: var(--surface);
+            }
+
+            .brand {
+                display: flex;
+                align-items: baseline;
+                gap: 10px;
+            }
+
+            .brand-mark {
+                font-family: var(--font-serif);
+                font-size: 30px;
+                font-weight: 500;
+                color: var(--coral);
+                letter-spacing: -0.02em;
+                line-height: 1;
+            }
+
+            .brand-name {
+                font-family: var(--font-serif);
+                font-size: 20px;
+                font-weight: 500;
+                letter-spacing: -0.01em;
+            }
+
+            .nav-group {
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+            }
+
+            .nav-label {
+                font-size: 10px;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                color: var(--subtle);
+                font-weight: 700;
+                padding: 0 12px;
+                margin-bottom: 8px;
+            }
+
+            .nav-item {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 9px 12px;
+                border-radius: var(--r-sm);
+                color: var(--muted);
+                font-size: 14px;
+                font-weight: 500;
+                transition: background .15s, color .15s;
+            }
+
+            .nav-item:hover {
+                background: var(--bg-2);
+                color: var(--text);
+            }
+
+            .nav-item.active {
+                background: var(--rose-soft);
+                color: var(--coral);
+                font-weight: 600;
+            }
+
+            .nav-item .icn {
+                width: 18px;
+                text-align: center;
+                opacity: 0.8;
+            }
+
+            .sidebar-user {
+                margin-top: auto;
+                padding-top: 18px;
+                border-top: 1px solid var(--line);
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .sidebar-user .avatar {
+                width: 36px;
+                height: 36px;
+                font-size: 13px;
+            }
+
+            .sidebar-user .info {
+                line-height: 1.3;
+                min-width: 0;
+            }
+
+            .sidebar-user .info b {
+                display: block;
+                font-size: 13.5px;
+                font-weight: 600;
+            }
+
+            .sidebar-user .info span {
+                font-size: 11.5px;
+                color: var(--muted);
+            }
+
+            /* TOPBAR desktop */
+            .topbar {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 28px;
+            }
+
+            .topbar .greet-d {
+                line-height: 1.1;
+            }
+
+            .topbar .ciao {
+                font-family: var(--font-hand);
+                font-size: 19px;
+                color: var(--lavender);
+                font-weight: 600;
+                display: block;
+            }
+
+            .topbar h1 {
+                font-family: var(--font-serif);
+                font-size: 28px;
+                font-weight: 500;
+                letter-spacing: -0.02em;
+                margin: 0;
+            }
+
+            .topbar-right {
+                display: flex;
+                gap: 10px;
+                align-items: center;
+            }
+
+            .month-picker {
+                display: inline-flex;
+                align-items: center;
+                background: var(--surface);
+                border: 1px solid var(--line);
+                border-radius: var(--r-md);
+                padding: 4px;
+                box-shadow: var(--shadow-sm);
+            }
+
+            .month-picker button {
+                background: transparent;
+                border: none;
+                width: 30px;
+                height: 30px;
+                color: var(--muted);
+                border-radius: var(--r-sm);
+                font-size: 14px;
+            }
+
+            .month-picker button:hover {
+                background: var(--bg-2);
+                color: var(--text);
+            }
+
+            .month-picker .lbl {
+                padding: 0 14px;
+                font-size: 13.5px;
+                font-weight: 600;
+                min-width: 130px;
+                text-align: center;
+            }
+
+            .btn-ghost {
+                background: var(--surface);
+                color: var(--text-2);
+                border: 1px solid var(--line);
+                padding: 9px 16px;
+                border-radius: var(--r-md);
+                font-size: 13px;
+                font-weight: 600;
+                box-shadow: var(--shadow-sm);
+            }
+
+            .btn-ghost:hover {
+                background: var(--bg-2);
+            }
+
+            .btn-primary {
+                background: var(--grad-hero);
+                color: white;
+                border: none;
+                padding: 10px 18px;
+                border-radius: var(--r-md);
+                font-size: 13px;
+                font-weight: 700;
+                box-shadow: var(--shadow-coral);
+            }
+
+            .btn-primary:hover {
+                filter: brightness(1.05);
+            }
+
+            /* HERO desktop: card grande, gradient più tenue, NUMERO con serif */
+            .hero {
+                margin: 0 0 24px;
+                padding: 36px 40px;
+                background: var(--grad-hero);
+                border-radius: var(--r-lg);
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-end;
+            }
+
+            .hero::before,
+            .hero::after { content: none; }
+
+            .hero-row { display: none; }
+
+            .hero-left .hero-label {
+                font-size: 12px;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                opacity: 0.9;
+                font-weight: 700;
+                margin-bottom: 10px;
+            }
+
+            .hero-amount {
+                font-family: var(--font-serif);
+                font-size: 76px;
+                font-weight: 400;
+                letter-spacing: -0.035em;
+                margin: 0 0 8px;
+                line-height: 0.95;
+            }
+
+            .hero-amount .cents {
+                font-size: 0.4em;
+                opacity: 0.85;
+                font-weight: 400;
+            }
+
+            .hero-sub { font-size: 14px; }
+
+            .hero-right {
+                display: flex;
+                gap: 24px;
+                text-align: right;
+                color: white;
+            }
+
+            .hero-right .h-stat .lbl {
+                font-size: 11px;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                opacity: 0.8;
+                font-weight: 700;
+            }
+
+            .hero-right .h-stat .val {
+                font-family: var(--font-serif);
+                font-size: 28px;
+                font-weight: 500;
+                letter-spacing: -0.02em;
+                font-variant-numeric: tabular-nums;
+                margin-top: 4px;
+            }
+
+            /* KPI row: 3 metriche con hairline (editoriale) */
+            .kpis {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 1px;
+                background: var(--line);
+                border: 1px solid var(--line);
+                border-radius: var(--r-md);
+                overflow: hidden;
+                margin-bottom: 28px;
+                box-shadow: var(--shadow-sm);
+            }
+
+            .kpi {
+                background: var(--surface);
+                padding: 18px 22px 20px;
+            }
+
+            .kpi .lbl {
+                font-size: 11px;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                color: var(--muted);
+                font-weight: 700;
+                margin-bottom: 10px;
+            }
+
+            .kpi .val {
+                font-size: 22px;
+                font-weight: 700;
+                letter-spacing: -0.02em;
+                font-variant-numeric: tabular-nums;
+            }
+
+            .kpi .val.up { color: var(--mint); }
+            .kpi .val.down { color: var(--coral); }
+
+            .kpi .sub {
+                margin-top: 4px;
+                font-size: 12px;
+                color: var(--muted);
+            }
+
+            /* Grid 2-colonne */
+            .grid {
+                display: grid;
+                grid-template-columns: 1.55fr 1fr;
+                gap: 28px;
+            }
+
+            .section { padding: 0; margin-bottom: 24px; }
+
+            .section-head h2 {
+                font-family: var(--font-serif);
+                font-size: 22px;
+                font-weight: 500;
+                letter-spacing: -0.02em;
+            }
+
+            /* Quick + week vivono ora dentro la colonna sx */
+            .quick {
+                padding: 0;
+                grid-template-columns: repeat(4, 1fr);
+                margin-bottom: 24px;
+            }
+
+            .quick .qa {
+                flex-direction: row;
+                gap: 12px;
+                padding: 14px 16px;
+                justify-content: flex-start;
+                border-radius: var(--r-md);
+            }
+
+            .qa .ico {
+                width: 40px;
+                height: 40px;
+            }
+
+            .qa .lbl {
+                font-size: 13.5px;
+            }
+
+            /* Week chart card: più ampia ma più piatta */
+            .week-card {
+                padding: 22px 24px 18px;
+                border-radius: var(--r-md);
+            }
+
+            .bars { height: 130px; }
+
+            /* TX list: aspetto più "tabulare" */
+            .tx-list {
+                border-radius: var(--r-md);
+            }
+
+            .tx {
+                padding: 14px 20px;
+            }
+
+            .day-label {
+                margin: 18px 0 8px;
+            }
+
+            /* Insight card: meno saturo, più editoriale */
+            .insight {
+                background: var(--surface);
+                border: 1px solid var(--line);
+                color: var(--text);
+                border-radius: var(--r-md);
+                box-shadow: var(--shadow-sm);
+                border-left: 3px solid var(--lavender);
+                padding: 20px 22px;
+            }
+
+            .insight .icon {
+                background: var(--rose-soft);
+                color: var(--text);
+            }
+
+            .insight .body { font-size: 14px; color: var(--text-2); }
+
+            /* Budget come lista verticale, no grid */
+            .budget-grid {
+                display: flex;
+                flex-direction: column;
+                gap: 0;
+                background: var(--surface);
+                border: 1px solid var(--line);
+                border-radius: var(--r-md);
+                overflow: hidden;
+                box-shadow: var(--shadow-sm);
+            }
+
+            .b-pill {
+                background: transparent;
+                border: none;
+                border-bottom: 1px solid var(--line);
+                border-radius: 0;
+                padding: 16px 20px;
+                box-shadow: none;
+                display: grid;
+                grid-template-columns: 36px 1fr auto;
+                grid-template-rows: auto auto;
+                column-gap: 14px;
+                row-gap: 4px;
+                align-items: center;
+            }
+
+            .b-pill:last-child {
+                border-bottom: none;
+            }
+
+            .b-pill .top {
+                display: contents;
+            }
+
+            .b-pill .emoji {
+                grid-row: 1 / 3;
+                width: 36px;
+                height: 36px;
+                border-radius: 10px;
+                font-size: 16px;
+                align-self: center;
+            }
+
+            .b-pill .nome {
+                grid-column: 2;
+                font-size: 14px;
+            }
+
+            .b-pill .val {
+                grid-column: 3;
+                grid-row: 1;
+                text-align: right;
+                margin: 0;
+                font-size: 14px;
+            }
+
+            .b-pill .bar {
+                grid-column: 2 / -1;
+                grid-row: 2;
+                margin-top: 0;
+            }
+        }
+
+        @media (min-width: 1180px) {
+            .topbar h1 { font-size: 32px; }
+            .hero-amount { font-size: 88px; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ============== SIDEBAR (solo desktop) ============== -->
+    <aside class="sidebar">
+        <div class="brand">
+            <span class="brand-mark">€</span>
+            <span class="brand-name">Spese</span>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-label">Workspace</div>
+            <a href="#" class="nav-item active"><span class="icn">▤</span> Panoramica</a>
+            <a href="#" class="nav-item"><span class="icn">⌗</span> Transazioni</a>
+            <a href="#" class="nav-item"><span class="icn">◔</span> Statistiche</a>
+            <a href="#" class="nav-item"><span class="icn">⊞</span> Categorie</a>
+            <a href="#" class="nav-item"><span class="icn">⟳</span> Ricorrenti</a>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-label">Account</div>
+            <a href="#" class="nav-item"><span class="icn">⚙</span> Impostazioni</a>
+            <a href="#" class="nav-item"><span class="icn">⤓</span> Esporta</a>
+        </div>
+
+        <div class="sidebar-user">
+            <div class="avatar">AT</div>
+            <div class="info">
+                <b>Armando T.</b>
+                <span>armando@example.com</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ============== SHELL (mobile + desktop main) ============== -->
+    <div class="shell">
+
+        <!-- MOBILE header -->
+        <header class="m-header">
+            <div class="greet">
+                <span class="ciao">Ciao!</span>
+                <span class="name">Armando 👋</span>
+            </div>
+            <div class="actions">
+                <button class="icon-btn" aria-label="Notifiche">
+                    🔔
+                    <span class="dot" aria-hidden="true"></span>
+                </button>
+                <div class="avatar">AT</div>
+            </div>
+        </header>
+
+        <!-- DESKTOP topbar -->
+        <div class="topbar">
+            <div class="greet-d">
+                <span class="ciao">Ciao Armando!</span>
+                <h1>Panoramica · Maggio</h1>
+            </div>
+            <div class="topbar-right">
+                <div class="month-picker">
+                    <button aria-label="Mese precedente">‹</button>
+                    <span class="lbl">Maggio 2026</span>
+                    <button aria-label="Mese successivo">›</button>
+                </div>
+                <button class="btn-ghost">Esporta</button>
+                <button class="btn-primary">+ Nuova transazione</button>
+            </div>
+        </div>
+
+        <!-- HERO -->
+        <div class="hero">
+            <div class="hero-left">
+                <div class="hero-row">
+                    <span class="hero-month">📅 Maggio 2026</span>
+                    <span class="hero-emoji">💸</span>
+                </div>
+                <div class="hero-label">Saldo del mese</div>
+                <div class="hero-amount">+1.247<span class="cents">,80&nbsp;€</span></div>
+                <div class="hero-sub">↑ 12% rispetto ad aprile · sei in linea con il budget 🎯</div>
+            </div>
+            <div class="hero-right">
+                <div class="h-stat">
+                    <div class="lbl">Entrate</div>
+                    <div class="val">+2.400,00</div>
+                </div>
+                <div class="h-stat">
+                    <div class="lbl">Spese</div>
+                    <div class="val">−1.152,20</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI row (solo desktop visivamente) -->
+        <div class="kpis">
+            <div class="kpi">
+                <div class="lbl">Budget</div>
+                <div class="val">76%</div>
+                <div class="sub">347,80 € disponibili</div>
+            </div>
+            <div class="kpi">
+                <div class="lbl">Transazioni</div>
+                <div class="val">43</div>
+                <div class="sub">22 questa settimana</div>
+            </div>
+            <div class="kpi">
+                <div class="lbl">Top categoria</div>
+                <div class="val">🛒 Spesa</div>
+                <div class="sub">418,30 € · 36%</div>
+            </div>
+            <div class="kpi">
+                <div class="lbl">Media giornaliera</div>
+                <div class="val down">−37,20&nbsp;€</div>
+                <div class="sub">↓ 8% vs aprile</div>
+            </div>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="quick">
+            <div class="qa spesa">
+                <div class="ico">−</div>
+                <div class="lbl">Nuova spesa</div>
+            </div>
+            <div class="qa entrata">
+                <div class="ico">+</div>
+                <div class="lbl">Nuova entrata</div>
+            </div>
+            <div class="qa trasf">
+                <div class="ico">⟳</div>
+                <div class="lbl">Ricorrenti</div>
+            </div>
+            <div class="qa">
+                <div class="ico" style="background:var(--surface-2); color:var(--text);">⤓</div>
+                <div class="lbl">Esporta CSV</div>
+            </div>
+        </div>
+
+        <!-- ============== GRID DUE COLONNE (desktop) ============== -->
+        <div class="grid">
+
+            <!-- LEFT COLUMN -->
+            <div>
+                <!-- Week chart -->
+                <div class="section">
+                    <div class="week-card">
+                        <div class="week-head">
+                            <div>
+                                <div class="titolo">Spese di questa settimana</div>
+                                <div>
+                                    <span class="totale">218,40&nbsp;€</span>
+                                    <span class="trend">↓ 8%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bars">
+                            <div class="bar-col"><div class="bar-vis" style="height:30%"></div><div class="bar-day">Lun</div></div>
+                            <div class="bar-col"><div class="bar-vis" style="height:55%"></div><div class="bar-day">Mar</div></div>
+                            <div class="bar-col"><div class="bar-vis" style="height:20%"></div><div class="bar-day">Mer</div></div>
+                            <div class="bar-col"><div class="bar-vis" style="height:78%"></div><div class="bar-day">Gio</div></div>
+                            <div class="bar-col"><div class="bar-vis" style="height:45%"></div><div class="bar-day">Ven</div></div>
+                            <div class="bar-col"><div class="bar-vis" style="height:90%"></div><div class="bar-day">Sab</div></div>
+                            <div class="bar-col today"><div class="bar-vis" style="height:35%"></div><div class="bar-day">Oggi</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transazioni -->
+                <div class="section">
+                    <div class="section-head">
+                        <h2>Movimenti recenti</h2>
+                        <a href="#">Tutti →</a>
+                    </div>
+
+                    <div class="day-label">Oggi · −47,30&nbsp;€</div>
+                    <div class="tx-list">
+                        <div class="tx">
+                            <div class="tx-emoji cibo">🛒</div>
+                            <div class="tx-body">
+                                <div class="tx-title">Esselunga</div>
+                                <div class="tx-sub">Spesa</div>
+                            </div>
+                            <div class="tx-amt down">−32,50&nbsp;€</div>
+                        </div>
+                        <div class="tx">
+                            <div class="tx-emoji trasporto">⛽</div>
+                            <div class="tx-body">
+                                <div class="tx-title">Q8 Easy</div>
+                                <div class="tx-sub">Trasporti</div>
+                            </div>
+                            <div class="tx-amt down">−14,80&nbsp;€</div>
+                        </div>
+                    </div>
+
+                    <div class="day-label">Ieri · +1.158,00&nbsp;€</div>
+                    <div class="tx-list">
+                        <div class="tx">
+                            <div class="tx-emoji lavoro">💼</div>
+                            <div class="tx-body">
+                                <div class="tx-title">Stipendio</div>
+                                <div class="tx-sub">Lavoro · ricorrente</div>
+                            </div>
+                            <div class="tx-amt up">+1.200,00&nbsp;€</div>
+                        </div>
+                        <div class="tx">
+                            <div class="tx-emoji ristorante">🍕</div>
+                            <div class="tx-body">
+                                <div class="tx-title">Da Mario</div>
+                                <div class="tx-sub">Ristoranti</div>
+                            </div>
+                            <div class="tx-amt down">−42,00&nbsp;€</div>
+                        </div>
+                    </div>
+
+                    <div class="day-label">Sab 17 maggio · −128,90&nbsp;€</div>
+                    <div class="tx-list">
+                        <div class="tx">
+                            <div class="tx-emoji shopping">👕</div>
+                            <div class="tx-body">
+                                <div class="tx-title">Zara</div>
+                                <div class="tx-sub">Abbigliamento</div>
+                            </div>
+                            <div class="tx-amt down">−89,90&nbsp;€</div>
+                        </div>
+                        <div class="tx">
+                            <div class="tx-emoji ristorante">☕</div>
+                            <div class="tx-body">
+                                <div class="tx-title">Bar Centrale</div>
+                                <div class="tx-sub">Bar &amp; caffè</div>
+                            </div>
+                            <div class="tx-amt down">−39,00&nbsp;€</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN -->
+            <div>
+                <!-- Insight -->
+                <div class="section">
+                    <div class="insight">
+                        <div class="icon">✨</div>
+                        <div class="body">
+                            Bel lavoro! Hai speso <b>14% in meno</b> in Spesa alimentare rispetto al
+                            mese scorso. Continua così 🌱
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Budget -->
+                <div class="section">
+                    <div class="section-head">
+                        <h2>I tuoi budget</h2>
+                        <a href="#">Gestisci →</a>
+                    </div>
+                    <div class="budget-grid">
+                        <div class="b-pill cibo">
+                            <div class="top">
+                                <div class="emoji">🛒</div>
+                                <div class="nome">Spesa alimentare</div>
+                            </div>
+                            <div class="val">82&nbsp;€ <span class="of">/ 200</span></div>
+                            <div class="bar"><div class="fill-mint" style="width:41%"></div></div>
+                        </div>
+                        <div class="b-pill ristorante">
+                            <div class="top">
+                                <div class="emoji">🍕</div>
+                                <div class="nome">Ristoranti</div>
+                            </div>
+                            <div class="val">142&nbsp;€ <span class="of">/ 150</span></div>
+                            <div class="bar"><div class="fill-coral" style="width:95%"></div></div>
+                        </div>
+                        <div class="b-pill trasporti">
+                            <div class="top">
+                                <div class="emoji">⛽</div>
+                                <div class="nome">Trasporti</div>
+                            </div>
+                            <div class="val">218&nbsp;€ <span class="of">/ 180</span></div>
+                            <div class="bar"><div class="fill-coral" style="width:100%"></div></div>
+                        </div>
+                        <div class="b-pill tempo">
+                            <div class="top">
+                                <div class="emoji">🎬</div>
+                                <div class="nome">Tempo libero</div>
+                            </div>
+                            <div class="val">68&nbsp;€ <span class="of">/ 250</span></div>
+                            <div class="bar"><div class="fill-purple" style="width:27%"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============== BOTTOM TAB BAR (solo mobile) ============== -->
+    <nav class="tabbar">
+        <a href="#" class="tab active"><span class="ic">🏠</span>Home</a>
+        <a href="#" class="tab"><span class="ic">📊</span>Grafici</a>
+        <button class="fab" aria-label="Aggiungi transazione">+</button>
+        <a href="#" class="tab"><span class="ic">🏷️</span>Categorie</a>
+        <a href="#" class="tab"><span class="ic">👤</span>Profilo</a>
+    </nav>
+</body>
+
+</html>

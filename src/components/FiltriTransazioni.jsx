@@ -1,13 +1,5 @@
-export default function FiltriTransazioni({
-    categorie,
-    filtri,
-    setFiltri,
-    onReset,
-}) {
-    const {
-        search, tipo, categorieSel, importoMin, importoMax,
-        dataDa, dataA, ordine,
-    } = filtri
+export default function FiltriTransazioni({ categorie, filtri, setFiltri, onReset }) {
+    const { search, tipo, categorieSel, importoMin, importoMax, dataDa, dataA, ordine } = filtri
 
     const set = (campo, valore) => setFiltri(prev => ({ ...prev, [campo]: valore }))
 
@@ -29,20 +21,18 @@ export default function FiltriTransazioni({
 
     return (
         <div style={S.body}>
-            {/* RICERCA */}
             <label style={S.field}>
                 <span style={S.lbl}>Cerca</span>
                 <input
                     type="search"
                     value={search}
                     onChange={e => set('search', e.target.value)}
-                    placeholder="Cerca nella descrizione… (es. lidl, uber)"
-                    style={S.search}
-                    aria-label="Cerca nelle transazioni"
+                    placeholder="es. lidl, uber…"
+                    style={S.input}
                 />
             </label>
 
-            <div style={S.row} className="grid-row">
+            <div style={S.row} className="grid-row-2">
                 <label style={S.field}>
                     <span style={S.lbl}>Tipo</span>
                     <select value={tipo} onChange={e => set('tipo', e.target.value)} style={S.input}>
@@ -63,53 +53,35 @@ export default function FiltriTransazioni({
                 </label>
             </div>
 
-            <div style={S.row} className="grid-row">
+            <div style={S.row} className="grid-row-2">
                 <label style={S.field}>
                     <span style={S.lbl}>Importo minimo (€)</span>
                     <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        inputMode="decimal"
+                        type="number" step="0.01" min="0" inputMode="decimal"
                         value={importoMin}
                         onChange={e => set('importoMin', e.target.value)}
-                        placeholder="0"
-                        style={S.input}
+                        placeholder="0" style={S.input}
                     />
                 </label>
                 <label style={S.field}>
                     <span style={S.lbl}>Importo massimo (€)</span>
                     <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        inputMode="decimal"
+                        type="number" step="0.01" min="0" inputMode="decimal"
                         value={importoMax}
                         onChange={e => set('importoMax', e.target.value)}
-                        placeholder="∞"
-                        style={S.input}
+                        placeholder="∞" style={S.input}
                     />
                 </label>
             </div>
 
-            <div style={S.row} className="grid-row">
+            <div style={S.row} className="grid-row-2">
                 <label style={S.field}>
                     <span style={S.lbl}>Data da</span>
-                    <input
-                        type="date"
-                        value={dataDa}
-                        onChange={e => set('dataDa', e.target.value)}
-                        style={S.input}
-                    />
+                    <input type="date" value={dataDa} onChange={e => set('dataDa', e.target.value)} style={S.input} />
                 </label>
                 <label style={S.field}>
                     <span style={S.lbl}>Data a</span>
-                    <input
-                        type="date"
-                        value={dataA}
-                        onChange={e => set('dataA', e.target.value)}
-                        style={S.input}
-                    />
+                    <input type="date" value={dataA} onChange={e => set('dataA', e.target.value)} style={S.input} />
                 </label>
             </div>
 
@@ -141,12 +113,7 @@ export default function FiltriTransazioni({
 
             {hasFiltri && (
                 <div style={S.footer}>
-                    <button
-                        type="button"
-                        onClick={onReset}
-                        style={S.resetBtn}
-                        className="ix-btn-ghost"
-                    >
+                    <button type="button" onClick={onReset} style={S.resetBtn} className="ix-btn-ghost">
                         Azzera tutto
                     </button>
                 </div>
@@ -158,42 +125,27 @@ export default function FiltriTransazioni({
 const S = {
     body: { display: 'flex', flexDirection: 'column', gap: 14 },
     field: { display: 'flex', flexDirection: 'column', gap: 6 },
-    lbl: { color: 'var(--text-muted)', fontSize: 12 },
-    search: {
-        width: '100%',
-        padding: '12px 14px',
-        background: 'var(--bg)',
-        border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-md)',
-        color: 'var(--text)',
-        fontSize: 14,
-        outline: 'none',
-        transition: 'border-color var(--t-fast), box-shadow var(--t-fast)',
-    },
-    row: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-        gap: 12,
-    },
+    lbl: { color: 'var(--text-muted)', fontSize: 12, fontWeight: 600 },
     input: {
-        padding: '10px 12px',
-        background: 'var(--bg)',
-        border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-sm)',
+        padding: '12px 14px',
+        background: 'var(--bg-2)',
+        border: '1px solid transparent',
+        borderRadius: 'var(--radius-md)',
         color: 'var(--text)',
         fontSize: 14,
         outline: 'none',
         fontFamily: 'inherit',
         transition: 'border-color var(--t-fast), box-shadow var(--t-fast)',
     },
+    row: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 },
     catGrid: { display: 'flex', flexWrap: 'wrap', gap: 8 },
     catChip: {
         display: 'inline-flex',
         alignItems: 'center',
         gap: 6,
         padding: '8px 14px',
-        background: 'var(--bg)',
-        border: '1px solid var(--border)',
+        background: 'var(--bg-2)',
+        border: '1px solid var(--line)',
         borderRadius: 'var(--radius-pill)',
         color: 'var(--text-muted)',
         fontSize: 13,
@@ -203,11 +155,12 @@ const S = {
     catName: { fontSize: 13 },
     footer: { display: 'flex', justifyContent: 'flex-end', marginTop: 6 },
     resetBtn: {
-        background: 'transparent',
-        border: '1px solid var(--border-strong)',
-        borderRadius: 'var(--radius-sm)',
+        background: 'var(--surface)',
+        border: '1px solid var(--line-2)',
+        borderRadius: 'var(--radius-md)',
         color: 'var(--text-muted)',
         fontSize: 12,
+        fontWeight: 600,
         padding: '8px 14px',
     },
 }
