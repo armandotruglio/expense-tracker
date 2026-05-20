@@ -8,6 +8,7 @@ import {
     formatEUR, formatData, oggiISO,
     meseISO, intervalloMese, meseLabel, mesePrec, meseSucc,
 } from '../utils/format'
+import FiltriTransazioni from './FiltriTransazioni'
 
 
 export default function Home() {
@@ -30,6 +31,75 @@ export default function Home() {
     const [saving, setSaving] = useState(false)
     const [formError, setFormError] = useState(null)
     const [editingId, setEditingId] = useState(null)
+
+    // ---- FILTRI ----
+    const FILTRI_INIZIALI = {
+        search: '',
+        tipo: 'tutti',
+        categorieSel: [],
+        importoMin: '',
+        importoMax: '',
+        dataDa: '',
+        dataA: '',
+        ordine: 'data_desc',
+    }
+    const [filtri, setFiltri] = useState(FILTRI_INIZIALI)
+    const resetFiltri = () => setFiltri(FILTRI_INIZIALI)
+
+    // applica i filtri alle transazioni del mese
+    const transazioniFiltrate = useMemo(() => {
+        let out = [...transazioni]
+
+        // ricerca testuale
+        if (filtri.search.trim()) {
+            const q = filtri.search.trim().toLowerCase()
+            out = out.filter(t =>
+                (t.descrizione ?? '').toLowerCase().includes(q) ||
+                (t.categoria?.nome ?? '').toLowerCase().includes(q)
+            )
+        }
+        // tipo
+        if (filtri.tipo !== 'tutti') {
+            out = out.filter(t => t.tipo === filtri.tipo)
+        }
+        // categorie (multi)
+        if (filtri.categorieSel.length > 0) {
+            out = out.filter(t => filtri.categorieSel.includes(t.categoria_id))
+        }
+        // importo min/max
+        if (filtri.importoMin !== '') {
+            const min = parseFloat(filtri.importoMin)
+            out = out.filter(t => Number(t.importo) >= min)
+        }
+        if (filtri.importoMax !== '') {
+            const max = parseFloat(filtri.importoMax)
+            out = out.filter(t => Number(t.importo) <= max)
+        }
+        // data da/a
+        if (filtri.dataDa) out = out.filter(t => t.data >= filtri.dataDa)
+        if (filtri.dataA) out = out.filter(t => t.data <= filtri.dataA)
+
+        // ordinamento
+        out.sort((a, b) => {
+            switch (filtri.ordine) {
+                case 'data_asc': return a.data.localeCompare(b.data)
+                case 'importo_desc': return Number(b.importo) - Number(a.importo)
+                case 'importo_asc': return Number(a.importo) - Number(b.importo)
+                case 'categoria': return (a.categoria?.nome ?? '').localeCompare(b.categoria?.nome ?? '')
+                case 'data_desc':
+                default: return b.data.localeCompare(a.data)
+            }
+        })
+
+        return out
+    }, [transazioni, filtri])
+
+    // riepilogo dei risultati filtrati
+    const risultatiFiltro = useMemo(() => ({
+        count: transazioniFiltrate.length,
+        totaleSpese: transazioniFiltrate.filter(t => t.tipo === 'spesa').reduce((s, t) => s + Number(t.importo), 0),
+        totaleEntrate: transazioniFiltrate.filter(t => t.tipo === 'entrata').reduce((s, t) => s + Number(t.importo), 0),
+    }), [transazioniFiltrate])
 
     function resetForm() {
         setData(oggiISO())
@@ -144,6 +214,14 @@ export default function Home() {
 
             <GraficoSpese transazioni={transazioni} categorie={categorie} />
 
+            <FiltriTransazioni
+                categorie={categorie}
+                filtri={filtri}
+                setFiltri={setFiltri}
+                risultati={risultatiFiltro}
+                onReset={resetFiltri}
+            />
+
             {/* FORM */}
             <section style={S.section}>
                 <div style={S.sectionHead}>
@@ -203,16 +281,16 @@ export default function Home() {
             <section style={S.section}>
                 <div style={S.sectionHead}>
                     <h2 style={S.h2}>Transazioni di {meseLabel(mese)}</h2>
-                    <span style={S.countBadge}>{transazioni.length}</span>
+                    <span style={S.countBadge}>{transazioniFiltrate.length}</span>
                 </div>
 
                 {txLoading ? (
                     <p style={S.muted}>Caricamento…</p>
-                ) : transazioni.length === 0 ? (
-                    <p style={S.muted}>Nessuna transazione in questo mese</p>
+                ) : transazioniFiltrate.length === 0 ? (
+                    <p style={S.muted}>Nessuna transazione corrisponde ai filtri</p>
                 ) : (
                     <ul style={S.list}>
-                        {transazioni.map(t => (
+                        {transazioniFiltrate.map(t => (
                             <li
                                 key={t.id}
                                 style={{
