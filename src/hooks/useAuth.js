@@ -6,13 +6,11 @@ export function useAuth() {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        // sessione corrente (se già loggato da prima)
         supabase.auth.getSession().then(({ data }) => {
             setSession(data.session)
             setLoading(false)
         })
 
-        // ascolta cambi (login/logout/refresh)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (_event, session) => setSession(session)
         )
@@ -23,6 +21,15 @@ export function useAuth() {
     const signIn = (email, password) =>
         supabase.auth.signInWithPassword({ email, password })
 
+    const signUp = (email, password) =>
+        supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                emailRedirectTo: window.location.origin,
+            },
+        })
+
     const signOut = () => supabase.auth.signOut()
 
     return {
@@ -30,6 +37,7 @@ export function useAuth() {
         user: session?.user ?? null,
         loading,
         signIn,
+        signUp,
         signOut,
     }
 }

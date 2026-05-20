@@ -8,10 +8,23 @@ export function useCategorie() {
 
     const fetchCategorie = useCallback(async () => {
         setLoading(true)
-        const { data, error } = await supabase
+        let { data, error } = await supabase
             .from('categorie')
             .select('*')
             .order('ordine', { ascending: true })
+
+        // Primo accesso di un nuovo utente: nessuna categoria → seed default
+        if (!error && (data?.length ?? 0) === 0) {
+            const { error: seedError } = await supabase.rpc('seed_categorie_default')
+            if (!seedError) {
+                const res = await supabase
+                    .from('categorie')
+                    .select('*')
+                    .order('ordine', { ascending: true })
+                data = res.data
+                error = res.error
+            }
+        }
 
         if (error) setError(error.message)
         else setCategorie(data ?? [])
