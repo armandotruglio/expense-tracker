@@ -1,29 +1,37 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 export function useTransazioni({ from, to } = {}) {
     const [transazioni, setTransazioni] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
+    const [reloadKey, setReloadKey] = useState(0)
 
-    const fetch = useCallback(async () => {
-        setLoading(true)
-        let q = supabase
-            .from('transazioni')
-            .select('*, categoria:categorie(id, nome, icona, colore)')
-            .order('data', { ascending: false })
-            .order('created_at', { ascending: false })
+    useEffect(() => {
+        let cancelled = false
 
-        if (from) q = q.gte('data', from)
-        if (to) q = q.lte('data', to)
+        const exec = async () => {
+            let q = supabase
+                .from('transazioni')
+                .select('*, categoria:categorie(id, nome, icona, colore)')
+                .order('data', { ascending: false })
+                .order('created_at', { ascending: false })
 
-        const { data, error } = await q
-        if (error) setError(error.message)
-        else setTransazioni(data ?? [])
-        setLoading(false)
-    }, [from, to])
+            if (from) q = q.gte('data', from)
+            if (to) q = q.lte('data', to)
 
-    useEffect(() => { fetch() }, [fetch])
+            const { data, error } = await q
+            if (cancelled) return
+            if (error) setError(error.message)
+            else setTransazioni(data ?? [])
+            setLoading(false)
+        }
+
+        exec()
+        return () => { cancelled = true }
+    }, [from, to, reloadKey])
+
+    const refresh = () => setReloadKey(k => k + 1)
 
     const aggiungi = async (tx) => {
         const { data: { user } } = await supabase.auth.getUser()
@@ -56,5 +64,5 @@ export function useTransazioni({ from, to } = {}) {
         setTransazioni(prev => prev.filter(t => t.id !== id))
     }
 
-    return { transazioni, loading, error, refresh: fetch, aggiungi, modifica, elimina }
+    return { transazioni, loading, error, refresh, aggiungi, modifica, elimina }
 }

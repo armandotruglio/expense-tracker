@@ -315,6 +315,7 @@ export default function Home() {
                 title={modal?.mode === 'edit' ? '✏️ Modifica transazione' : '+ Nuova transazione'}
             >
                 <TransazioneForm
+                    key={modal?.mode === 'edit' ? `edit-${modal.tx.id}` : 'create'}
                     categorie={categorie}
                     catLoading={catLoading}
                     iniziale={modal?.mode === 'edit' ? modal.tx : null}

@@ -1,24 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { oggiISO } from '../utils/format'
 
 export default function TransazioneForm({ categorie, catLoading, iniziale, onSubmit, onCancel }) {
-    const [data, setData] = useState(oggiISO())
-    const [importo, setImporto] = useState('')
-    const [tipo, setTipo] = useState('spesa')
-    const [categoriaId, setCategoriaId] = useState('')
-    const [descrizione, setDescrizione] = useState('')
+    // Stato inizializzato dalla prop una sola volta.
+    // Per resettare il form (es. modifica vs nuovo) il parent passa una `key` distinta.
+    const [data, setData] = useState(iniziale?.data ?? oggiISO())
+    const [importo, setImporto] = useState(iniziale ? String(iniziale.importo) : '')
+    const [tipo, setTipo] = useState(iniziale?.tipo ?? 'spesa')
+    const [categoriaId, setCategoriaId] = useState(iniziale?.categoria_id ?? '')
+    const [descrizione, setDescrizione] = useState(iniziale?.descrizione ?? '')
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState(null)
-
-    useEffect(() => {
-        if (iniziale) {
-            setData(iniziale.data)
-            setImporto(String(iniziale.importo))
-            setTipo(iniziale.tipo)
-            setCategoriaId(iniziale.categoria_id ?? '')
-            setDescrizione(iniziale.descrizione ?? '')
-        }
-    }, [iniziale])
 
     async function handleSubmit(e) {
         e.preventDefault()

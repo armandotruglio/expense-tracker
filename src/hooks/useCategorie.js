@@ -1,43 +1,53 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 export function useCategorie() {
     const [categorie, setCategorie] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
+    const [reloadKey, setReloadKey] = useState(0)
 
-    const fetchCategorie = useCallback(async () => {
-        setLoading(true)
-        let { data, error } = await supabase
-            .from('categorie')
-            .select('*')
-            .order('ordine', { ascending: true })
+    useEffect(() => {
+        let cancelled = false
 
-        // Primo accesso di un nuovo utente: nessuna categoria → seed default
-        if (!error && (data?.length ?? 0) === 0) {
-            const { error: seedError } = await supabase.rpc('seed_categorie_default')
-            if (!seedError) {
-                const res = await supabase
-                    .from('categorie')
-                    .select('*')
-                    .order('ordine', { ascending: true })
-                data = res.data
-                error = res.error
+        const exec = async () => {
+            let { data, error } = await supabase
+                .from('categorie')
+                .select('*')
+                .order('ordine', { ascending: true })
+
+            if (cancelled) return
+
+            // Primo accesso di un nuovo utente: nessuna categoria → seed default
+            if (!error && (data?.length ?? 0) === 0) {
+                const { error: seedError } = await supabase.rpc('seed_categorie_default')
+                if (cancelled) return
+                if (!seedError) {
+                    const res = await supabase
+                        .from('categorie')
+                        .select('*')
+                        .order('ordine', { ascending: true })
+                    if (cancelled) return
+                    data = res.data
+                    error = res.error
+                }
             }
+
+            if (error) setError(error.message)
+            else setCategorie(data ?? [])
+            setLoading(false)
         }
 
-        if (error) setError(error.message)
-        else setCategorie(data ?? [])
-        setLoading(false)
-    }, [])
+        exec()
+        return () => { cancelled = true }
+    }, [reloadKey])
 
-    useEffect(() => { fetchCategorie() }, [fetchCategorie])
+    const refresh = () => setReloadKey(k => k + 1)
 
     const aggiungi = async (cat) => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('Non autenticato')
 
-        // calcola prossimo "ordine"
         const maxOrdine = categorie.reduce((m, c) => Math.max(m, c.ordine ?? 0), 0)
 
         const { data, error } = await supabase
@@ -72,7 +82,7 @@ export function useCategorie() {
         categorie,
         loading,
         error,
-        refresh: fetchCategorie,
+        refresh,
         aggiungi,
         modifica,
         elimina,
