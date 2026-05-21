@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { getUserIdOrThrow, supabase } from '../lib/supabase'
+
+const TX_SELECT = '*, categoria:categorie(id, nome, icona, colore)'
 
 export function useTransazioni({ from, to } = {}) {
     const [transazioni, setTransazioni] = useState([])
@@ -13,7 +15,7 @@ export function useTransazioni({ from, to } = {}) {
         const exec = async () => {
             let q = supabase
                 .from('transazioni')
-                .select('*, categoria:categorie(id, nome, icona, colore)')
+                .select(TX_SELECT)
                 .order('data', { ascending: false })
                 .order('created_at', { ascending: false })
 
@@ -34,12 +36,11 @@ export function useTransazioni({ from, to } = {}) {
     const refresh = () => setReloadKey(k => k + 1)
 
     const aggiungi = async (tx) => {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error('Non autenticato')
+        const userId = await getUserIdOrThrow()
         const { data, error } = await supabase
             .from('transazioni')
-            .insert({ ...tx, user_id: user.id })
-            .select('*, categoria:categorie(id, nome, icona, colore)')
+            .insert({ ...tx, user_id: userId })
+            .select(TX_SELECT)
             .single()
         if (error) throw error
         setTransazioni(prev => [data, ...prev])
@@ -47,11 +48,13 @@ export function useTransazioni({ from, to } = {}) {
     }
 
     const modifica = async (id, patch) => {
+        const userId = await getUserIdOrThrow()
         const { data, error } = await supabase
             .from('transazioni')
             .update(patch)
             .eq('id', id)
-            .select('*, categoria:categorie(id, nome, icona, colore)')
+            .eq('user_id', userId)
+            .select(TX_SELECT)
             .single()
         if (error) throw error
         setTransazioni(prev => prev.map(t => t.id === id ? data : t))
@@ -59,7 +62,12 @@ export function useTransazioni({ from, to } = {}) {
     }
 
     const elimina = async (id) => {
-        const { error } = await supabase.from('transazioni').delete().eq('id', id)
+        const userId = await getUserIdOrThrow()
+        const { error } = await supabase
+            .from('transazioni')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', userId)
         if (error) throw error
         setTransazioni(prev => prev.filter(t => t.id !== id))
     }

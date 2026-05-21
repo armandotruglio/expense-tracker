@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { getUserIdOrThrow, supabase } from '../lib/supabase'
 
 const LS_KEY_PREFIX = 'expense-tracker:ricorrenti:'
 
@@ -108,12 +108,10 @@ export function useRicorrenti() {
     const refresh = useCallback(() => setReloadKey(k => k + 1), [])
 
     const aggiungi = useCallback(async (item) => {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error('Non autenticato')
-
+        const userId = await getUserIdOrThrow()
         const { data, error } = await supabase
             .from('ricorrenze')
-            .insert({ user_id: user.id, ...appToDb(item) })
+            .insert({ user_id: userId, ...appToDb(item) })
             .select()
             .single()
         if (error) throw error
@@ -123,10 +121,12 @@ export function useRicorrenti() {
     }, [])
 
     const modifica = useCallback(async (id, patch) => {
+        const userId = await getUserIdOrThrow()
         const { data, error } = await supabase
             .from('ricorrenze')
             .update(appToDb(patch))
             .eq('id', id)
+            .eq('user_id', userId)
             .select()
             .single()
         if (error) throw error
@@ -136,7 +136,12 @@ export function useRicorrenti() {
     }, [])
 
     const elimina = useCallback(async (id) => {
-        const { error } = await supabase.from('ricorrenze').delete().eq('id', id)
+        const userId = await getUserIdOrThrow()
+        const { error } = await supabase
+            .from('ricorrenze')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', userId)
         if (error) throw error
         setList(prev => prev.filter(r => r.id !== id))
     }, [])

@@ -3,6 +3,7 @@ import { useCategorie } from '../hooks/useCategorie'
 import { formatEUR } from '../utils/format'
 import Modal from './Modal'
 import ConfirmDialog from './ConfirmDialog'
+import { useToast } from '../hooks/useToast'
 
 const EMOJI_SUGGERITE = ['🏠', '🛒', '🚗', '💡', '🎭', '🍕', '💊', '👕', '💻', '📦', '📌', '💵', '🌱', '🎬', '✈️', '🎁', '🐕', '📚', '💼', '⛽']
 const COLORI_SUGGERITI = ['#ff7a85', '#a78bfa', '#34c89b', '#ffb319', '#3b82f6', '#facc15', '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#94a3b8', '#8b5cf6']
@@ -10,9 +11,9 @@ const EMPTY_FORM = { nome: '', icona: '📦', colore: '#a78bfa', budget_mensile:
 
 export default function Categorie() {
     const { categorie, loading, aggiungi, modifica, elimina } = useCategorie()
+    const toast = useToast()
     const [modal, setModal] = useState(null)
     const [toDelete, setToDelete] = useState(null)
-    const [deleteError, setDeleteError] = useState(null)
 
     function apriNuova() { setModal({ form: EMPTY_FORM }) }
     function apriModifica(c) {
@@ -39,7 +40,8 @@ export default function Categorie() {
             await elimina(toDelete.id)
             setToDelete(null)
         } catch (err) {
-            setDeleteError(err.message)
+            toast.error(err?.message ?? 'Errore durante l\'eliminazione')
+            setToDelete(null)
         }
     }
 
@@ -97,7 +99,7 @@ export default function Categorie() {
                                         ✏️
                                     </button>
                                     <button
-                                        onClick={() => { setDeleteError(null); setToDelete(c) }}
+                                        onClick={() => setToDelete(c)}
                                         style={S.btnIcon}
                                         className="ix-btn-icon"
                                         aria-label={`Elimina categoria ${c.nome}`}
@@ -134,12 +136,8 @@ export default function Categorie() {
                 confirmLabel="Elimina"
                 danger
                 onConfirm={handleConfirmDelete}
-                onCancel={() => { setToDelete(null); setDeleteError(null) }}
+                onCancel={() => setToDelete(null)}
             />
-
-            {deleteError && (
-                <div style={S.toast} role="alert">Errore: {deleteError}</div>
-            )}
         </div>
     )
 }
@@ -366,20 +364,6 @@ const S = {
     emptyIcon: { fontSize: 48, marginBottom: 12, opacity: 0.6 },
     emptyTitle: { fontSize: 16, fontWeight: 700, marginBottom: 6 },
     emptyMsg: { color: 'var(--text-muted)', fontSize: 14, marginBottom: 16 },
-    toast: {
-        position: 'fixed',
-        bottom: 'calc(16px + var(--safe-bottom))',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        background: 'var(--danger-soft)',
-        border: '1px solid var(--danger-ring)',
-        color: 'var(--danger)',
-        padding: '10px 16px',
-        borderRadius: 'var(--radius-md)',
-        fontSize: 13,
-        boxShadow: 'var(--shadow-md)',
-        zIndex: 1100,
-    },
 }
 
 const F = {
