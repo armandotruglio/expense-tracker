@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useCategorie } from '../hooks/useCategorie'
 import { useTransazioni } from '../hooks/useTransazioni'
@@ -24,7 +24,7 @@ const FILTRI_INIZIALI = {
 
 const MQ_DESKTOP = '(min-width: 960px)'
 
-export default function Home({ openCreateTrigger = 0 }) {
+export default function Home({ openCreateTrigger = 0, onCreateConsumed }) {
     const { user } = useAuth()
     const { categorie, loading: catLoading } = useCategorie()
 
@@ -52,14 +52,20 @@ export default function Home({ openCreateTrigger = 0 }) {
         return () => mq.removeEventListener('change', h)
     }, [])
 
-    // Apertura nuova transazione triggerata dal FAB del TabBar (mobile)
-    const lastTriggerRef = useRef(0)
+    // Apertura nuova transazione triggerata dal FAB del TabBar.
+    // Il parent reset-ta il trigger appena consumato, così un eventuale
+    // ri-montaggio di Home (es. tornando alla home da un'altra rotta) non
+    // riapre la modale.
     useEffect(() => {
-        if (openCreateTrigger > 0 && openCreateTrigger !== lastTriggerRef.current) {
-            lastTriggerRef.current = openCreateTrigger
+        if (openCreateTrigger <= 0) return
+        let cancelled = false
+        Promise.resolve().then(() => {
+            if (cancelled) return
             setModal({ mode: 'create' })
-        }
-    }, [openCreateTrigger])
+            onCreateConsumed?.()
+        })
+        return () => { cancelled = true }
+    }, [openCreateTrigger, onCreateConsumed])
 
     async function handleFormSubmit(payload) {
         if (modal?.mode === 'edit') await modifica(modal.tx.id, payload)

@@ -44,10 +44,22 @@ function AppShell() {
     setCreateTrigger(t => t + 1)
   }, [navigate, location.pathname])
 
+  const handleCreateConsumed = useCallback(() => {
+    setCreateTrigger(0)
+  }, [])
+
   return (
     <Layout onAddClick={handleAddClick}>
       <Routes>
-        <Route path="/" element={<Home openCreateTrigger={createTrigger} />} />
+        <Route
+          path="/"
+          element={
+            <Home
+              openCreateTrigger={createTrigger}
+              onCreateConsumed={handleCreateConsumed}
+            />
+          }
+        />
         <Route path="/categorie" element={<Categorie />} />
         <Route path="/ricorrenti" element={<Ricorrenti />} />
         <Route path="*" element={<Navigate to="/" replace />} />
