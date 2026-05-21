@@ -6,6 +6,7 @@ import Home from './components/Home'
 import Categorie from './components/Categorie'
 import Ricorrenti from './components/Ricorrenti'
 import Layout from './components/Layout'
+import ToastProvider from './components/ToastProvider'
 
 export default function App() {
   const { session, loading } = useAuth()
@@ -22,15 +23,17 @@ export default function App() {
   }
 
   return (
-    <BrowserRouter>
-      {!session ? (
-        <Routes>
-          <Route path="*" element={<Login />} />
-        </Routes>
-      ) : (
-        <AppShell />
-      )}
-    </BrowserRouter>
+    <ToastProvider>
+      <BrowserRouter>
+        {!session ? (
+          <Routes>
+            <Route path="*" element={<Login />} />
+          </Routes>
+        ) : (
+          <AppShell />
+        )}
+      </BrowserRouter>
+    </ToastProvider>
   )
 }
 

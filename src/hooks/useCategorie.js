@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { getUserIdOrThrow, supabase } from '../lib/supabase'
 
 export function useCategorie() {
     const [categorie, setCategorie] = useState([])
@@ -45,14 +45,12 @@ export function useCategorie() {
     const refresh = () => setReloadKey(k => k + 1)
 
     const aggiungi = async (cat) => {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error('Non autenticato')
-
+        const userId = await getUserIdOrThrow()
         const maxOrdine = categorie.reduce((m, c) => Math.max(m, c.ordine ?? 0), 0)
 
         const { data, error } = await supabase
             .from('categorie')
-            .insert({ ...cat, user_id: user.id, ordine: maxOrdine + 1 })
+            .insert({ ...cat, user_id: userId, ordine: maxOrdine + 1 })
             .select()
             .single()
         if (error) throw error
@@ -61,10 +59,12 @@ export function useCategorie() {
     }
 
     const modifica = async (id, patch) => {
+        const userId = await getUserIdOrThrow()
         const { data, error } = await supabase
             .from('categorie')
             .update(patch)
             .eq('id', id)
+            .eq('user_id', userId)
             .select()
             .single()
         if (error) throw error
@@ -73,7 +73,12 @@ export function useCategorie() {
     }
 
     const elimina = async (id) => {
-        const { error } = await supabase.from('categorie').delete().eq('id', id)
+        const userId = await getUserIdOrThrow()
+        const { error } = await supabase
+            .from('categorie')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', userId)
         if (error) throw error
         setCategorie(prev => prev.filter(c => c.id !== id))
     }

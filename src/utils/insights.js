@@ -1,17 +1,15 @@
 // Genera insight automatici confrontando il mese corrente con il precedente.
+// Riceve gli oggetti già aggregati da statsMese() per non ri-fare i conti.
 
 import { formatEUR } from './format'
 
 const SOGLIA_PCT = 15 // ignora variazioni sotto il 15% (troppo rumorose)
 
-export function generaInsights({ txMese, txMesePrec, categorie }) {
+export function generaInsights({ statsMese, statsMesePrec, categorie }) {
     const insights = []
 
-    const speseMese = txMese.filter(t => t.tipo === 'spesa')
-    const speseMesePrec = txMesePrec.filter(t => t.tipo === 'spesa')
-
-    const totMese = speseMese.reduce((s, t) => s + Number(t.importo), 0)
-    const totMesePrec = speseMesePrec.reduce((s, t) => s + Number(t.importo), 0)
+    const totMese = statsMese.totSpese
+    const totMesePrec = statsMesePrec.totSpese
 
     // 1) Confronto totale mese vs mese precedente
     if (totMesePrec > 0 && totMese > 0) {
@@ -36,15 +34,13 @@ export function generaInsights({ txMese, txMesePrec, categorie }) {
     }
 
     // 2) Categoria che cresce/cala di più
-    const perCatMese = aggrega(speseMese)
-    const perCatPrec = aggrega(speseMesePrec)
     const variazioni = []
-    for (const [catId, totale] of perCatMese.entries()) {
-        const prec = perCatPrec.get(catId) ?? 0
-        if (prec === 0 || totale === 0) continue
-        const pct = ((totale - prec) / prec) * 100
-        if (Math.abs(pct) >= SOGLIA_PCT && Math.max(totale, prec) > 30) {
-            variazioni.push({ catId, totale, prec, pct })
+    for (const [catId, cur] of statsMese.perCategoria.entries()) {
+        const prec = statsMesePrec.perCategoria.get(catId)?.totale ?? 0
+        if (prec === 0 || cur.totale === 0) continue
+        const pct = ((cur.totale - prec) / prec) * 100
+        if (Math.abs(pct) >= SOGLIA_PCT && Math.max(cur.totale, prec) > 30) {
+            variazioni.push({ catId, totale: cur.totale, prec, pct })
         }
     }
     variazioni.sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct))
@@ -73,7 +69,7 @@ export function generaInsights({ txMese, txMesePrec, categorie }) {
     for (const cat of categorie) {
         const budget = Number(cat.budget_mensile ?? 0)
         if (budget <= 0) continue
-        const speso = perCatMese.get(cat.id) ?? 0
+        const speso = statsMese.perCategoria.get(cat.id)?.totale ?? 0
         const pct = (speso / budget) * 100
         if (pct >= 100) {
             insights.push({
@@ -94,13 +90,4 @@ export function generaInsights({ txMese, txMesePrec, categorie }) {
 
     // Limita a 3 per non saturare
     return insights.slice(0, 3)
-}
-
-function aggrega(txs) {
-    const map = new Map()
-    for (const t of txs) {
-        const k = t.categoria_id ?? 'nessuna'
-        map.set(k, (map.get(k) ?? 0) + Number(t.importo))
-    }
-    return map
 }
